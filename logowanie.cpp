@@ -100,6 +100,8 @@ void logInWindow::on_btnZaloguj_clicked()
 
                 mainWindow->show();
 
+                baza.close();
+
                 this->close();
 
             }

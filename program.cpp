@@ -66,6 +66,8 @@ Program::Program(QString nazwaUzytkownikaLog) :
 
     PobieranieDanych(nazwaUzytkownika, &uzytkownik);
 
+    baza.close();
+
     //**********************
     //******DEBUG_LOG*******
     qDebug()<< "id: " << uzytkownik.id << "imie: " << uzytkownik.imie << "nazwisko: " << uzytkownik.nazwisko << "haslo: " << uzytkownik.haslo <<"pracownik?: " << uzytkownik.jestPracownikiem;
@@ -152,21 +154,58 @@ void Program::on_btnHZmien_clicked()
 {
     bool czyTakieSame;
 
-    QSqlDatabase baza;
+    //QSqlDatabase baza;
 
-    baza = QSqlDatabase::addDatabase("QMYSQL");
+    //baza = QSqlDatabase::addDatabase("QMYSQL");
 
-    LaczenieDoSQL(&baza);
+    //LaczenieDoSQL(&baza);
 
-    baza.open();
+   // baza.open();
+
 
     QSqlQueryModel zapytanie;
+
+    //jak wpisze to samo wszedzie to nie dziala
 
     zapytanie.setQuery("SELECT haslo FROM uzytkownik WHERE uzytkownik_nazwa = '" + nazwaUzytkownika + "';");
 
     QString haslo = zapytanie.record(0).value("haslo").toString();
 
-    zapytanie.setQuery("UPDATE uzytkownik SET haslo = '"+ this->ui->txtHNowe->text() +"' WHERE uzytkownik_nazwa = '" + nazwaUzytkownika + "' AND haslo = '"+ haslo +"'");
+    if(this->ui->txtHStare->text() == haslo)
+    {
+        zapytanie.setQuery("UPDATE uzytkownik SET haslo = '"+ this->ui->txtHNowe->text() +"' WHERE uzytkownik_nazwa = '" + nazwaUzytkownika + "' AND haslo = '"+ haslo +"'");
+    }
+
+
+   /* if(wykonaloSie == true)
+    {
+        QMessageBox msgBox;
+
+        msgBox.setWindowTitle("WARNING");
+
+        msgBox.setInformativeText("Zmieniono haslo");
+
+        msgBox.setStandardButtons(QMessageBox::Ok);
+
+        msgBox.setDefaultButton(QMessageBox::Ok);
+
+        int ret = msgBox.exec();
+    }
+    else
+    {
+        QMessageBox msgBox;
+
+        msgBox.setWindowTitle("WARNING");
+
+        msgBox.setInformativeText("Bledna wprowadzenie starego hasla badz powtorzenia");
+
+        msgBox.setStandardButtons(QMessageBox::Retry);
+
+        msgBox.setDefaultButton(QMessageBox::Retry);
+
+        int ret = msgBox.exec();
+
+    }*/
 }
 
 

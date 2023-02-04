@@ -22,6 +22,8 @@ set(PROJECT_SOURCES
         program.h
         program.cpp
         program.ui
+        bazadanychlacze.cpp
+        bazadanychlacze.h
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
