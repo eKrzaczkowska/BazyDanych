@@ -1,6 +1,19 @@
 #ifndef LOGINWINDOW_H
 #define LOGINWINDOW_H
 
+//pliki z graficznym interfejsem
+#include "./ui_loginwindow.h"
+#include "./ui_program.h"
+
+//reszta bibliotek
+#include <string>
+#include <QDebug>
+#include <QtSql/QSqlDatabase>
+#include <QtSql/QSqlDriver>
+#include <QtSql/QSqlError>
+#include <QtSql/QSqlQuery>
+#include <QMessageBox>
+
 #include <QMainWindow>
 
 QT_BEGIN_NAMESPACE

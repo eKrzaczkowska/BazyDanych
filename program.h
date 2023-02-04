@@ -1,10 +1,18 @@
 #ifndef PROGRAM_H
 #define PROGRAM_H
 
-#include <QDialog>
+//reszta bibliotek
 #include <string>
-#include <iostream>
+#include <QDebug>
 #include <QtSql/QSqlDatabase>
+#include <QtSql/QSqlDriver>
+#include <QtSql/QSqlError>
+#include <QtSql/QSqlQuery>
+#include <QtSql/QSqlRecord>
+#include <QtSql/QSqlQueryModel>
+#include <QMessageBox>
+#include <QDialog>
+#include <iostream>
 
 namespace Ui {
 class Program;
@@ -22,6 +30,8 @@ public:
 
     void LaczenieDoSQL(QSqlDatabase *baza);
 
+    QSqlQueryModel *queryModel;
+
 protected:
 
     ~Program();
@@ -34,6 +44,8 @@ private slots:
     void on_txtHPowtorzone_textChanged(const QString &arg1);
 
     void on_btnHZmien_clicked();
+
+    void on_btnPSzukaj_clicked();
 
 private:
 

@@ -2,18 +2,6 @@
 #include "logowanie.h"
 #include "program.h"
 
-//pliki z graficznym interfejsem
-#include "./ui_loginwindow.h"
-#include "./ui_program.h"
-
-//reszta bibliotek
-#include <string>
-#include <QDebug>
-#include <QtSql/QSqlDatabase>
-#include <QtSql/QSqlDriver>
-#include <QtSql/QSqlError>
-#include <QtSql/QSqlQuery>
-#include <QMessageBox>
 
 //okno LOGOWANIA
 logInWindow::logInWindow(QWidget *parent)
@@ -142,7 +130,7 @@ void logInWindow::on_btnZaloguj_clicked()
 
         msgBox.setWindowTitle("ERROR");
 
-        msgBox.setInformativeText("Blad polaczenia z baza danych");
+        msgBox.setInformativeText("Blad polaczenia z baza danych :: logowanie.cpp");
 
         msgBox.setStandardButtons(QMessageBox::Retry | QMessageBox::Close);
 

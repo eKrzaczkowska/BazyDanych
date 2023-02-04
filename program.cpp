@@ -1,17 +1,6 @@
 #include "program.h"
 #include "ui_program.h"
 
-//reszta bibliotek
-#include <string>
-#include <QDebug>
-#include <QtSql/QSqlDatabase>
-#include <QtSql/QSqlDriver>
-#include <QtSql/QSqlError>
-#include <QtSql/QSqlQuery>
-#include <QtSql/QSqlRecord>
-#include <QtSql/QSqlQueryModel>
-
-#include <QMessageBox>
 
 void Program::LaczenieDoSQL(QSqlDatabase *baza)
 {
@@ -154,59 +143,136 @@ void Program::on_btnHZmien_clicked()
 {
     bool czyTakieSame;
 
-    //QSqlDatabase baza;
+    QSqlDatabase baza;
 
-    //baza = QSqlDatabase::addDatabase("QMYSQL");
+    baza = QSqlDatabase::addDatabase("QMYSQL");
 
-    //LaczenieDoSQL(&baza);
+    LaczenieDoSQL(&baza);
 
-   // baza.open();
+    baza.open();
 
 
     QSqlQueryModel zapytanie;
-
-    //jak wpisze to samo wszedzie to nie dziala
 
     zapytanie.setQuery("SELECT haslo FROM uzytkownik WHERE uzytkownik_nazwa = '" + nazwaUzytkownika + "';");
 
     QString haslo = zapytanie.record(0).value("haslo").toString();
 
-    if(this->ui->txtHStare->text() == haslo)
-    {
-        zapytanie.setQuery("UPDATE uzytkownik SET haslo = '"+ this->ui->txtHNowe->text() +"' WHERE uzytkownik_nazwa = '" + nazwaUzytkownika + "' AND haslo = '"+ haslo +"'");
-    }
+    try {
 
-
-   /* if(wykonaloSie == true)
-    {
         QMessageBox msgBox;
 
         msgBox.setWindowTitle("WARNING");
 
-        msgBox.setInformativeText("Zmieniono haslo");
+        if(this->ui->txtHStare->text() == haslo)
+        {
+            zapytanie.setQuery("UPDATE uzytkownik SET haslo = '"+ this->ui->txtHNowe->text() +"' WHERE uzytkownik_nazwa = '" + nazwaUzytkownika + "' AND haslo = '"+ haslo +"'");
+            //**********************
+            //******DEBUG_LOG*******
+            qDebug()<< "zmieniono haslo";
+            //**********************
 
-        msgBox.setStandardButtons(QMessageBox::Ok);
+            msgBox.setInformativeText("ZMIENIONO HASLO");
 
-        msgBox.setDefaultButton(QMessageBox::Ok);
+            msgBox.setStandardButtons(QMessageBox::Ok);
+
+            msgBox.setDefaultButton(QMessageBox::Ok);
+
+        }
+        else
+        {
+            //**********************
+            //******DEBUG_LOG*******
+            qDebug()<< "haslo nie zmieniono";
+            //**********************
+
+            msgBox.setInformativeText("Bledna wprowadzenie starego hasla badz powtorzenia");
+
+            msgBox.setStandardButtons(QMessageBox::Retry);
+
+            msgBox.setDefaultButton(QMessageBox::Retry);
+
+        }
 
         int ret = msgBox.exec();
-    }
-    else
+
+        baza.close();
+
+    } catch (const std::exception &e)
     {
+
+        //**********************
+        //******DEBUG_LOG*******
+        //qDebug()<<"Blad polaczenia z baza danych! :: program.cpp";
+        //qDebug() << "ERROR load: " << baza.lastError().text();
+        //**********************
+
         QMessageBox msgBox;
 
-        msgBox.setWindowTitle("WARNING");
+        msgBox.setWindowTitle("ERROR");
 
-        msgBox.setInformativeText("Bledna wprowadzenie starego hasla badz powtorzenia");
+        msgBox.setInformativeText("Blad polaczenia z baza danych");
 
-        msgBox.setStandardButtons(QMessageBox::Retry);
+        msgBox.setStandardButtons(QMessageBox::Retry | QMessageBox::Close);
 
         msgBox.setDefaultButton(QMessageBox::Retry);
 
         int ret = msgBox.exec();
+    }
 
-    }*/
 }
+
+void Program::on_btnPSzukaj_clicked()
+{
+
+
+    QSqlDatabase baza;
+
+    baza = QSqlDatabase::addDatabase("QMYSQL");
+
+    LaczenieDoSQL(&baza);
+
+    baza.open();
+
+    queryModel = new QSqlQueryModel(this);
+
+    queryModel->setQuery("SELECT uzytkownik_id, imie, nazwisko, uzytkownik_nazwa AS login, pracownik FROM uzytkownik WHERE CONCAT(imie, ' ', nazwisko, uzytkownik_nazwa) LIKE '%"+ this->ui->txtPSzukaj->text() +"%' ORDER BY nazwisko;");
+
+    // ui->tvBooks->setModel(queryModel);
+
+    try {
+
+        this->ui->dgUzytkownicy->setModel(queryModel);
+
+        this->ui->dgUzytkownicy->hideColumn(0); //chowanie kolumny z id
+
+        baza.close();
+
+    } catch (const std::exception &e)
+    {
+
+        //**********************
+        //******DEBUG_LOG*******
+        //qDebug()<<"Blad polaczenia z baza danych! :: program.cpp";
+        //qDebug() << "ERROR load: " << baza.lastError().text();
+        //**********************
+
+        QMessageBox msgBox;
+
+        msgBox.setWindowTitle("ERROR");
+
+        msgBox.setInformativeText("Blad polaczenia z baza danych");
+
+        msgBox.setStandardButtons(QMessageBox::Retry | QMessageBox::Close);
+
+        msgBox.setDefaultButton(QMessageBox::Retry);
+
+        int ret = msgBox.exec();
+    }
+
+}
+
+
 
 
 /*

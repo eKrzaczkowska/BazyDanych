@@ -31,14 +31,61 @@
    <property name="currentIndex">
     <number>1</number>
    </property>
-   <widget class="QWidget" name="tab_2">
+   <widget class="QWidget" name="pracownicy">
     <attribute name="title">
-     <string>Tab 2</string>
+     <string>pracownicy</string>
     </attribute>
+    <widget class="QTableView" name="dgUzytkownicy">
+     <property name="geometry">
+      <rect>
+       <x>495</x>
+       <y>10</y>
+       <width>451</width>
+       <height>561</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_4">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>40</y>
+       <width>91</width>
+       <height>51</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Pracownik: </string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="txtPSzukaj">
+     <property name="geometry">
+      <rect>
+       <x>130</x>
+       <y>50</y>
+       <width>171</width>
+       <height>31</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="btnPSzukaj">
+     <property name="geometry">
+      <rect>
+       <x>340</x>
+       <y>50</y>
+       <width>87</width>
+       <height>26</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>SZUKAJ</string>
+     </property>
+    </widget>
    </widget>
    <widget class="QWidget" name="tabHaslo">
     <attribute name="icon">
-     <iconset theme="audio-card"/>
+     <iconset theme="audio-card">
+      <normaloff>.</normaloff>.</iconset>
     </attribute>
     <attribute name="title">
      <string>zmiana hasła</string>
@@ -82,6 +129,9 @@
         <width>113</width>
         <height>26</height>
        </rect>
+      </property>
+      <property name="echoMode">
+       <enum>QLineEdit::Password</enum>
       </property>
      </widget>
      <widget class="QLabel" name="label">
@@ -132,6 +182,9 @@
         <height>26</height>
        </rect>
       </property>
+      <property name="echoMode">
+       <enum>QLineEdit::Password</enum>
+      </property>
      </widget>
      <widget class="QLineEdit" name="txtHPowtorzone">
       <property name="geometry">
@@ -141,6 +194,9 @@
         <width>113</width>
         <height>26</height>
        </rect>
+      </property>
+      <property name="echoMode">
+       <enum>QLineEdit::Password</enum>
       </property>
      </widget>
      <zorder>txtHStare</zorder>
