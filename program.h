@@ -13,6 +13,7 @@
 #include <QMessageBox>
 #include <QDialog>
 #include <iostream>
+#include <QtSql/QSqlTableModel>
 
 namespace Ui {
 class Program;
@@ -46,6 +47,8 @@ private slots:
     void on_btnHZmien_clicked();
 
     void on_btnPSzukaj_clicked();
+
+    void on_dgUzytkownicy_clicked(const QModelIndex &index);
 
 private:
 

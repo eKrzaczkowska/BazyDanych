@@ -29,7 +29,7 @@
     <enum>Qt::LeftToRight</enum>
    </property>
    <property name="currentIndex">
-    <number>1</number>
+    <number>0</number>
    </property>
    <widget class="QWidget" name="pracownicy">
     <attribute name="title">
@@ -80,6 +80,101 @@
      <property name="text">
       <string>SZUKAJ</string>
      </property>
+    </widget>
+    <widget class="QGroupBox" name="boxEdycjaUzytkownik">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>110</y>
+       <width>441</width>
+       <height>231</height>
+      </rect>
+     </property>
+     <property name="title">
+      <string>Edycja danych użytkownika</string>
+     </property>
+     <widget class="QLabel" name="label_5">
+      <property name="geometry">
+       <rect>
+        <x>30</x>
+        <y>40</y>
+        <width>66</width>
+        <height>18</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Imie:</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="txtPImie">
+      <property name="geometry">
+       <rect>
+        <x>130</x>
+        <y>40</y>
+        <width>113</width>
+        <height>26</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="txtPNazwisko">
+      <property name="geometry">
+       <rect>
+        <x>130</x>
+        <y>90</y>
+        <width>113</width>
+        <height>26</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_6">
+      <property name="geometry">
+       <rect>
+        <x>30</x>
+        <y>90</y>
+        <width>66</width>
+        <height>18</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Nazwisko:</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="txtPLogin">
+      <property name="geometry">
+       <rect>
+        <x>130</x>
+        <y>140</y>
+        <width>113</width>
+        <height>26</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_7">
+      <property name="geometry">
+       <rect>
+        <x>30</x>
+        <y>140</y>
+        <width>66</width>
+        <height>18</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Login:</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="cbP">
+      <property name="geometry">
+       <rect>
+        <x>300</x>
+        <y>90</y>
+        <width>92</width>
+        <height>24</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Pracownik</string>
+      </property>
+     </widget>
     </widget>
    </widget>
    <widget class="QWidget" name="tabHaslo">

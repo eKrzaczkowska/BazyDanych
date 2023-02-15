@@ -25,6 +25,7 @@ Program::Program(QWidget *parent) :
 }
 
 QString nazwaUzytkownika;
+int id_rekordu;
 
 Program::Program(QString nazwaUzytkownikaLog) :
     ui(new Ui::Program)
@@ -222,6 +223,7 @@ void Program::on_btnHZmien_clicked()
 
 }
 
+//Pobieranie rekordów z SQL do tablicy wynikow
 void Program::on_btnPSzukaj_clicked()
 {
 
@@ -238,11 +240,11 @@ void Program::on_btnPSzukaj_clicked()
 
     queryModel->setQuery("SELECT uzytkownik_id, imie, nazwisko, uzytkownik_nazwa AS login, pracownik FROM uzytkownik WHERE CONCAT(imie, ' ', nazwisko, uzytkownik_nazwa) LIKE '%"+ this->ui->txtPSzukaj->text() +"%' ORDER BY nazwisko;");
 
-    // ui->tvBooks->setModel(queryModel);
-
     try {
 
         this->ui->dgUzytkownicy->setModel(queryModel);
+
+        this->ui->dgUzytkownicy->setSelectionBehavior(QAbstractItemView::SelectRows); //zaznaczanie calego wiersza
 
         this->ui->dgUzytkownicy->hideColumn(0); //chowanie kolumny z id
 
@@ -272,6 +274,45 @@ void Program::on_btnPSzukaj_clicked()
 
 }
 
+//zachowanie na klikniecia wiersza w tabeli
+void Program::on_dgUzytkownicy_clicked(const QModelIndex &index)
+{
+    //to jest dobranie się do rekordu ID a nie do numeru w graficznym
+    QString currentCell = this->ui->dgUzytkownicy->currentIndex().data(Qt::DisplayRole).toString();
+    const QModelIndexList indexes  = this->ui->dgUzytkownicy->selectionModel()->selectedRows();
+    id_rekordu = indexes.at(0).data(Qt::DisplayRole).toInt(); //numer indeksu zaznaczonego wiersza
+
+    //**********************
+    //******DEBUG_LOG*******
+    qDebug() << "nacisnieta komorka: " << currentCell;
+    qDebug() << "komorka o numerze id: " <<  id_rekordu;
+    //**********************
+
+    QString tabName = queryModel->index(id_rekordu-1,1).data().toString();
+    QString tabSubName = queryModel->index(id_rekordu-1,2).data().toString();
+    QString tabLog = queryModel->index(id_rekordu-1,3).data().toString();
+    int ifWorker = queryModel->index(id_rekordu-1,4).data().toInt();
+
+    this->ui->txtPImie->setText(tabName);
+    this->ui->txtPNazwisko->setText(tabSubName);
+    this->ui->txtPLogin->setText(tabLog);
+    if(ifWorker == 1)
+    {
+        //**********************
+        //******DEBUG_LOG*******
+        qDebug() << "Jest  pracownikiem";
+        //**********************
+        this->ui->cbP->setChecked(true);
+    }
+    else
+    {
+        //**********************
+        //******DEBUG_LOG*******
+        qDebug() << "Nie jest pracownikiem";
+        //**********************
+        this->ui->cbP->setChecked(false);
+    }
+}
 
 
 
@@ -283,6 +324,9 @@ void Program::on_btnPSzukaj_clicked()
  * zapytanie.bindValue(:login,"janek");
  * zapytanie.exec();}
  * */
+
+
+
 
 
 
