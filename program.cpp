@@ -46,21 +46,11 @@ Program::Program(QString nazwaUzytkownikaLog) :
     //qDebug()<<"nazwa uzytkownika przekazana: "<< nazwaUzytkownika;
     //**********************
 
-    QSqlDatabase baza;
-
-    baza = QSqlDatabase::addDatabase("QMYSQL");
-
-    LaczenieDoSQL(&baza);
-
-    baza.open();
-
     PobieranieDanych(nazwaUzytkownika, &uzytkownik);
-
-    baza.close();
 
     //**********************
     //******DEBUG_LOG*******
-    qDebug()<< "id: " << uzytkownik.id << "imie: " << uzytkownik.imie << "nazwisko: " << uzytkownik.nazwisko << "haslo: " << uzytkownik.haslo <<"pracownik?: " << uzytkownik.jestPracownikiem;
+    //qDebug()<< "id: " << uzytkownik.id << "imie: " << uzytkownik.imie << "nazwisko: " << uzytkownik.nazwisko << "haslo: " << uzytkownik.haslo <<"pracownik?: " << uzytkownik.jestPracownikiem;
     //**********************
 
 }
@@ -73,6 +63,13 @@ Program::~Program()
 //Pobranie informacji o zalogowanym uzytkowniku
 void Program::PobieranieDanych(QString nazwaUzytkownikaLog, struct Uzytkownik *uzytkownik)
 {
+    QSqlDatabase baza;
+
+    baza = QSqlDatabase::addDatabase("QMYSQL");
+
+    LaczenieDoSQL(&baza);
+
+    baza.open();
 
     QSqlQueryModel zapytanie;
 
@@ -96,6 +93,9 @@ void Program::PobieranieDanych(QString nazwaUzytkownikaLog, struct Uzytkownik *u
     {
         uzytkownik->jestPracownikiem = true;
     }
+
+
+    baza.close();
 }
 //~Pobranie informacji o zalogowanym uzytkowniku
 
@@ -277,21 +277,21 @@ void Program::on_btnPSzukaj_clicked()
 //zachowanie na klikniecia wiersza w tabeli
 void Program::on_dgUzytkownicy_clicked(const QModelIndex &index)
 {
-    //to jest dobranie się do rekordu ID a nie do numeru w graficznym
-    QString currentCell = this->ui->dgUzytkownicy->currentIndex().data(Qt::DisplayRole).toString();
-    const QModelIndexList indexes  = this->ui->dgUzytkownicy->selectionModel()->selectedRows();
-    id_rekordu = indexes.at(0).data(Qt::DisplayRole).toInt(); //numer indeksu zaznaczonego wiersza
+
+    //dobranie się do numeru id kliknietego wiersza i do aktualnie nacisnietej komorki
+    //QString currentCell = this->ui->dgUzytkownicy->currentIndex().data(Qt::DisplayRole).toString();
+    id_rekordu = this->ui->dgUzytkownicy->selectionModel()->selectedIndexes().at(0).data(Qt::DisplayRole).toInt();
 
     //**********************
     //******DEBUG_LOG*******
-    qDebug() << "nacisnieta komorka: " << currentCell;
-    qDebug() << "komorka o numerze id: " <<  id_rekordu;
+    //qDebug() << "nacisnieta komorka: " << currentCell;
+    //qDebug() << "komorka o numerze id: " <<  id_rekordu;
     //**********************
 
-    QString tabName = queryModel->index(id_rekordu-1,1).data().toString();
-    QString tabSubName = queryModel->index(id_rekordu-1,2).data().toString();
-    QString tabLog = queryModel->index(id_rekordu-1,3).data().toString();
-    int ifWorker = queryModel->index(id_rekordu-1,4).data().toInt();
+    QString tabName = this->ui->dgUzytkownicy->selectionModel()->selectedIndexes().at(1).data(Qt::DisplayRole).toString();
+    QString tabSubName = this->ui->dgUzytkownicy->selectionModel()->selectedIndexes().at(2).data(Qt::DisplayRole).toString();
+    QString tabLog = this->ui->dgUzytkownicy->selectionModel()->selectedIndexes().at(3).data(Qt::DisplayRole).toString();
+    int ifWorker = this->ui->dgUzytkownicy->selectionModel()->selectedIndexes().at(4).data(Qt::DisplayRole).toInt();
 
     this->ui->txtPImie->setText(tabName);
     this->ui->txtPNazwisko->setText(tabSubName);
@@ -300,7 +300,7 @@ void Program::on_dgUzytkownicy_clicked(const QModelIndex &index)
     {
         //**********************
         //******DEBUG_LOG*******
-        qDebug() << "Jest  pracownikiem";
+        //qDebug() << "Jest  pracownikiem";
         //**********************
         this->ui->cbP->setChecked(true);
     }
@@ -308,10 +308,12 @@ void Program::on_dgUzytkownicy_clicked(const QModelIndex &index)
     {
         //**********************
         //******DEBUG_LOG*******
-        qDebug() << "Nie jest pracownikiem";
+        //qDebug() << "Nie jest pracownikiem";
         //**********************
         this->ui->cbP->setChecked(false);
     }
+
+   // baza.close();
 }
 
 
