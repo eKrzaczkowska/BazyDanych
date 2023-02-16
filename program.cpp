@@ -1,6 +1,9 @@
 #include "program.h"
 #include "ui_program.h"
 
+//odznaczyc jezeli chcemy logi
+//#define LOG
+
 
 void Program::LaczenieDoSQL(QSqlDatabase *baza)
 {
@@ -25,6 +28,7 @@ Program::Program(QWidget *parent) :
 }
 
 QString nazwaUzytkownika;
+
 int id_rekordu;
 
 Program::Program(QString nazwaUzytkownikaLog) :
@@ -41,16 +45,18 @@ Program::Program(QString nazwaUzytkownikaLog) :
 
     nazwaUzytkownika = nazwaUzytkownikaLog;
 
-    //**********************
     //******DEBUG_LOG*******
-    //qDebug()<<"nazwa uzytkownika przekazana: "<< nazwaUzytkownika;
+    #ifdef LOG
+    qDebug()<<"nazwa uzytkownika przekazana: "<< nazwaUzytkownika;
+    #endif
     //**********************
 
     PobieranieDanych(nazwaUzytkownika, &uzytkownik);
 
-    //**********************
     //******DEBUG_LOG*******
-    //qDebug()<< "id: " << uzytkownik.id << "imie: " << uzytkownik.imie << "nazwisko: " << uzytkownik.nazwisko << "haslo: " << uzytkownik.haslo <<"pracownik?: " << uzytkownik.jestPracownikiem;
+    #ifdef LOG
+    qDebug()<< "id: " << uzytkownik.id << "imie: " << uzytkownik.imie << "nazwisko: " << uzytkownik.nazwisko << "haslo: " << uzytkownik.haslo <<"pracownik?: " << uzytkownik.jestPracownikiem;
+    #endif
     //**********************
 
 }
@@ -59,6 +65,7 @@ Program::~Program()
 {
     delete ui;
 }
+
 
 //Pobranie informacji o zalogowanym uzytkowniku
 void Program::PobieranieDanych(QString nazwaUzytkownikaLog, struct Uzytkownik *uzytkownik)
@@ -96,6 +103,8 @@ void Program::PobieranieDanych(QString nazwaUzytkownikaLog, struct Uzytkownik *u
 
 
     baza.close();
+
+    QSqlDatabase::removeDatabase(baza.connectionName());
 }
 //~Pobranie informacji o zalogowanym uzytkowniku
 
@@ -105,18 +114,22 @@ void Program::btnZmien_pokaz()
 {
     if(this->ui->txtHStare->text() != "" && this->ui->txtHNowe->text() != "" && this->ui->txtHPowtorzone->text() == this->ui->txtHNowe->text())
     {
-        //**********************
         //******DEBUG_LOG*******
-        //qDebug()<< "zezwalamy na wcisniecie przycisku zmien haslo";
+        #ifdef LOG
+        qDebug()<< "zezwalamy na wcisniecie przycisku zmien haslo";
+        #endif
         //**********************
+
         this->ui->btnHZmien->setEnabled(1);
     }
     else
     {
-        //**********************
         //******DEBUG_LOG*******
-        //qDebug()<< "nie zezwalamy na wcisniecie przycisku zmien haslo";
+        #ifdef LOG
+        qDebug()<< "nie zezwalamy na wcisniecie przycisku zmien haslo";
+        #endif
         //**********************
+
         this->ui->btnHZmien->setEnabled(0);
     }
 }
@@ -168,9 +181,11 @@ void Program::on_btnHZmien_clicked()
         if(this->ui->txtHStare->text() == haslo)
         {
             zapytanie.setQuery("UPDATE uzytkownik SET haslo = '"+ this->ui->txtHNowe->text() +"' WHERE uzytkownik_nazwa = '" + nazwaUzytkownika + "' AND haslo = '"+ haslo +"'");
-            //**********************
+
             //******DEBUG_LOG*******
+            #ifdef LOG
             qDebug()<< "zmieniono haslo";
+            #endif
             //**********************
 
             msgBox.setInformativeText("ZMIENIONO HASLO");
@@ -182,9 +197,10 @@ void Program::on_btnHZmien_clicked()
         }
         else
         {
-            //**********************
             //******DEBUG_LOG*******
+            #ifdef LOG
             qDebug()<< "haslo nie zmieniono";
+            #endif
             //**********************
 
             msgBox.setInformativeText("Bledna wprowadzenie starego hasla badz powtorzenia");
@@ -201,11 +217,11 @@ void Program::on_btnHZmien_clicked()
 
     } catch (const std::exception &e)
     {
-
-        //**********************
         //******DEBUG_LOG*******
-        //qDebug()<<"Blad polaczenia z baza danych! :: program.cpp";
-        //qDebug() << "ERROR load: " << baza.lastError().text();
+        #ifdef LOG
+        qDebug()<<"Blad polaczenia z baza danych! :: program.cpp";
+        qDebug() << "ERROR load: " << baza.lastError().text();
+        #endif
         //**********************
 
         QMessageBox msgBox;
@@ -253,10 +269,11 @@ void Program::on_btnPSzukaj_clicked()
     } catch (const std::exception &e)
     {
 
-        //**********************
         //******DEBUG_LOG*******
-        //qDebug()<<"Blad polaczenia z baza danych! :: program.cpp";
-        //qDebug() << "ERROR load: " << baza.lastError().text();
+        #ifdef LOG
+        qDebug()<<"Blad polaczenia z baza danych! :: program.cpp";
+        qDebug() << "ERROR load: " << baza.lastError().text();
+        #endif
         //**********************
 
         QMessageBox msgBox;
@@ -272,6 +289,9 @@ void Program::on_btnPSzukaj_clicked()
         int ret = msgBox.exec();
     }
 
+    baza.close();
+
+
 }
 
 //zachowanie na klikniecia wiersza w tabeli
@@ -282,52 +302,131 @@ void Program::on_dgUzytkownicy_clicked(const QModelIndex &index)
     //QString currentCell = this->ui->dgUzytkownicy->currentIndex().data(Qt::DisplayRole).toString();
     id_rekordu = this->ui->dgUzytkownicy->selectionModel()->selectedIndexes().at(0).data(Qt::DisplayRole).toInt();
 
-    //**********************
     //******DEBUG_LOG*******
+    #ifdef LOG
     //qDebug() << "nacisnieta komorka: " << currentCell;
-    //qDebug() << "komorka o numerze id: " <<  id_rekordu;
+    qDebug() << "komorka o numerze id: " <<  id_rekordu;
+    #endif
     //**********************
 
     QString tabName = this->ui->dgUzytkownicy->selectionModel()->selectedIndexes().at(1).data(Qt::DisplayRole).toString();
+
     QString tabSubName = this->ui->dgUzytkownicy->selectionModel()->selectedIndexes().at(2).data(Qt::DisplayRole).toString();
+
     QString tabLog = this->ui->dgUzytkownicy->selectionModel()->selectedIndexes().at(3).data(Qt::DisplayRole).toString();
+
     int ifWorker = this->ui->dgUzytkownicy->selectionModel()->selectedIndexes().at(4).data(Qt::DisplayRole).toInt();
 
     this->ui->txtPImie->setText(tabName);
+
     this->ui->txtPNazwisko->setText(tabSubName);
+
     this->ui->txtPLogin->setText(tabLog);
+
     if(ifWorker == 1)
     {
-        //**********************
         //******DEBUG_LOG*******
-        //qDebug() << "Jest  pracownikiem";
+        #ifdef LOG
+        qDebug() << "Jest  pracownikiem";
+        #endif
         //**********************
+
         this->ui->cbP->setChecked(true);
     }
     else
     {
-        //**********************
         //******DEBUG_LOG*******
-        //qDebug() << "Nie jest pracownikiem";
+        #ifdef LOG
+        qDebug() << "Nie jest pracownikiem";
+        #endif
         //**********************
+
         this->ui->cbP->setChecked(false);
     }
 
    // baza.close();
 }
 
+//dodanie uzytkownikow do bazy na razie jest domyslne haslo 123 (zmienic dodać okienko?)
+void Program::on_btnPdodaj_clicked()
+{
+    QString imie = this->ui->txtPImie->text();
+
+    QString nazwisko = this->ui->txtPNazwisko->text();
+
+    QString login = this->ui->txtPLogin->text();
+
+    bool pracownik = this->ui->cbP->checkState();
+
+    //******DEBUG_LOG*******
+    #ifdef LOG
+    qDebug() << "Wpisane dane -> imie: " << imie << "nazwisko: " << nazwisko << "nazwa: " << login << "czy jest pracownikiem?: " << pracownik  ;
+    #endif
+    //**********************
+
+    {
+
+        QSqlDatabase baza;
+
+        baza = QSqlDatabase::addDatabase("QMYSQL");
+
+        LaczenieDoSQL(&baza);
+
+        baza.open();
+
+        if(baza.transaction())
+        {
+            QSqlQuery query(baza);
+
+            query.prepare("INSERT INTO `Gabinet`.`uzytkownik` (`uzytkownik_nazwa`, `imie`, `nazwisko`, `pracownik`, `haslo`) "
+                          "VALUES (:uzytkownik_nazwa, :imie, :nazwisko, :pracownik, :haslo);");
+            query.bindValue( ":uzytkownik_nazwa", login);
+            query.bindValue( ":imie", imie );
+            query.bindValue( ":nazwisko", nazwisko );
+            query.bindValue( ":pracownik", pracownik );
+            query.bindValue( ":haslo", login ); //domyslne haslo zawsze jak login
+
+            if( !query.exec() )
+            {
+                qFatal( "Failed to add tag" );
+            }
 
 
-/*
- * zapytanie.prepare("INSERT INTO Uzytkownicy(Id, Imie, Nazwisko, Login) ""VALUES(:id, :imie, :nazwisko, :login)");
- * zapytanie.bindValue(:id,10);
- * zapytanie.bindValue(:imie,"Jan");
- * zapytanie.bindValue(:nazwisko,"Kowalski");
- * zapytanie.bindValue(:login,"janek");
- * zapytanie.exec();}
- * */
+           if(!baza.commit())
+           {
+               //******DEBUG_LOG*******
+               #ifdef LOG
+               qDebug()<<"Failed to commit";
+               #endif
+               //**********************
 
+               baza.rollback();
+           }
 
+           //******DEBUG_LOG*******
+           #ifdef LOG
+           qDebug() << "Inserted using Qt Transaction";
+           #endif
+           //**********************
+
+        }
+        else
+        {
+            //******DEBUG_LOG*******
+            #ifdef LOG
+            qDebug() << "Failed to start transaction mode";
+            #endif
+            //**********************
+        }
+
+        baza.close();
+    }
+
+    on_btnPSzukaj_clicked();
+
+}
+
+//DODAC USUWANIE I MODYFIKOWANIE:
 
 
 

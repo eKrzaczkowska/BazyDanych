@@ -176,6 +176,45 @@
       </property>
      </widget>
     </widget>
+    <widget class="QPushButton" name="btnPusun">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>540</y>
+       <width>87</width>
+       <height>26</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>usun</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="btnPmodyfikuj">
+     <property name="geometry">
+      <rect>
+       <x>200</x>
+       <y>540</y>
+       <width>87</width>
+       <height>26</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>modyfikuj</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="btnPdodaj">
+     <property name="geometry">
+      <rect>
+       <x>360</x>
+       <y>540</y>
+       <width>87</width>
+       <height>26</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>dodaj</string>
+     </property>
+    </widget>
    </widget>
    <widget class="QWidget" name="tabHaslo">
     <attribute name="icon">

@@ -14,6 +14,8 @@
 #include <QDialog>
 #include <iostream>
 #include <QtSql/QSqlTableModel>
+#include <QFile>
+#include <QSqlQuery>
 
 namespace Ui {
 class Program;
@@ -49,6 +51,9 @@ private slots:
     void on_btnPSzukaj_clicked();
 
     void on_dgUzytkownicy_clicked(const QModelIndex &index);
+
+    void on_btnPdodaj_clicked();
+
 
 private:
 

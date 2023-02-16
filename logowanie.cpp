@@ -48,6 +48,7 @@ void logInWindow::on_btnZaloguj_clicked()
 
     try
     {
+        bool zgodne = true;
 
         //sciaganie z bazy danych wszystkich rekordow uzytkownik_nazwa i haslo
         baza.open();
@@ -80,40 +81,56 @@ void logInWindow::on_btnZaloguj_clicked()
                 //**********************
                 //******DEBUG_LOG*******
                 //qDebug() << "Logowanie udane";
-                //**********************
+                //**********************=
 
                 this->hide();
+
+                baza.driver()->close();
+
+                baza.close();
+
+                QSqlDatabase::removeDatabase(baza.connectionName());
 
                 Program * mainWindow  = new Program(nazwaUzytkownika);
 
                 mainWindow->show();
 
-                baza.close();
+               // delete zapytanie;
 
-                this->close();
+                delete this->ui;
+
+                //this->close();
 
             }
             else
             {
-
-                //**********************
-                //******DEBUG_LOG*******
-                //qDebug() << "Logowanie sie nie powiodlo";
-                //**********************
-
-                QMessageBox msgBox;
-
-                msgBox.setWindowTitle("WARNING");
-
-                msgBox.setInformativeText("Bledna nazwa uzytkownika lub niepoprawne haslo");
-
-                msgBox.setStandardButtons(QMessageBox::Retry);
-
-                msgBox.setDefaultButton(QMessageBox::Retry);
-
-                int ret = msgBox.exec();
-
+                zgodne = false;
             }
+
+        }
+        //**********************
+        //******DEBUG_LOG*******
+        //qDebug() << "Logowanie sie nie powiodlo";
+        //**********************
+
+        if(zgodne == false)
+        {
+            baza.close();
+
+            QSqlDatabase::removeDatabase(baza.connectionName());
+
+            QMessageBox msgBox;
+
+            msgBox.setWindowTitle("WARNING");
+
+            msgBox.setInformativeText("Bledna nazwa uzytkownika lub niepoprawne haslo");
+
+            msgBox.setStandardButtons(QMessageBox::Retry);
+
+            msgBox.setDefaultButton(QMessageBox::Retry);
+
+            int ret = msgBox.exec();
+
         }
 
 
