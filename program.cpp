@@ -297,6 +297,9 @@ void Program::on_btnPSzukaj_clicked()
 //zachowanie na klikniecia wiersza w tabeli
 void Program::on_dgUzytkownicy_clicked(const QModelIndex &index)
 {
+    this->ui->btnPmodyfikuj->setEnabled(1);
+
+    this->ui->btnPusun->setEnabled(1);
 
     //dobranie się do numeru id kliknietego wiersza i do aktualnie nacisnietej komorki
     //QString currentCell = this->ui->dgUzytkownicy->currentIndex().data(Qt::DisplayRole).toString();
@@ -388,7 +391,13 @@ void Program::on_btnPdodaj_clicked()
 
             if( !query.exec() )
             {
-                qFatal( "Failed to add tag" );
+                //******DEBUG_LOG*******
+                #ifdef LOG
+                qDebug() << "Failed to add tag";
+                #endif
+                //**********************
+
+                //qFatal( "Failed to add tag" );
             }
 
 
@@ -422,13 +431,244 @@ void Program::on_btnPdodaj_clicked()
         baza.close();
     }
 
-    on_btnPSzukaj_clicked();
+    showRecords();
 
 }
 
-//DODAC USUWANIE I MODYFIKOWANIE:
+//DODAC USUWANIE I MODYFIKOWANIE REKORDOW:
 
 
+//modyfikowacja danych uzytkownika
+
+void Program::on_btnPmodyfikuj_clicked()
+{
+    QString imie = this->ui->txtPImie->text();
+
+    QString nazwisko = this->ui->txtPNazwisko->text();
+
+    QString login = this->ui->txtPLogin->text();
+
+    bool pracownik = this->ui->cbP->checkState();
+
+    //******DEBUG_LOG*******
+    #ifdef LOG
+    qDebug() << "Wpisane dane -> imie: " << imie << "nazwisko: " << nazwisko << "nazwa: " << login << "czy jest pracownikiem?: " << pracownik  ;
+    #endif
+    //**********************
+
+    {
+
+        QSqlDatabase baza;
+
+        baza = QSqlDatabase::addDatabase("QMYSQL");
+
+        LaczenieDoSQL(&baza);
+
+        baza.open();
+
+        if(baza.transaction())
+        {
+            QSqlQuery query(baza);
+
+            query.prepare("UPDATE `Gabinet`.`uzytkownik` SET `imie` = '"+ imie +"', `nazwisko` = '"+ nazwisko +"', `uzytkownik_nazwa` = '"+ login +"', `pracownik` = "
+                          ""+ QString::number(pracownik) +" WHERE uzytkownik_id = '" +  QString::number(id_rekordu) + "';");
+
+            if( !query.exec() )
+            {
+
+                //******DEBUG_LOG*******
+                #ifdef LOG
+                qDebug() << "Failed to add tag";
+                #endif
+                //**********************
+
+                //qFatal( "Failed to add tag" );
+            }
 
 
+           if(!baza.commit())
+           {
+               //******DEBUG_LOG*******
+               #ifdef LOG
+               qDebug()<<"Failed to commit";
+               #endif
+               //**********************
+
+               baza.rollback();
+           }
+
+           //******DEBUG_LOG*******
+           #ifdef LOG
+           qDebug() << "Inserted using Qt Transaction";
+           #endif
+           //**********************
+
+        }
+        else
+        {
+            //******DEBUG_LOG*******
+            #ifdef LOG
+            qDebug() << "Failed to start transaction mode";
+            #endif
+            //**********************
+        }
+
+        baza.close();
+    }
+
+    showRecords();
+}
+
+//usuniecie uzytkownika z zabezpieczeniem przed usuwaniem admina
+void Program::on_btnPusun_clicked()
+{
+    {
+        QString login = this->ui->txtPLogin->text();
+
+        QSqlDatabase baza;
+
+        baza = QSqlDatabase::addDatabase("QMYSQL");
+
+        LaczenieDoSQL(&baza);
+
+        baza.open();
+
+        if(baza.transaction())
+        {
+
+            QMessageBox msgBox;
+
+            QMessageBox::StandardButton reply;
+
+            reply = msgBox.question(this, "WARRRNING", "Czy na pewno chcesz usunac tego uzytkownika", QMessageBox::Yes | QMessageBox::No);
+
+            QSqlQuery query(baza);
+
+            if(!(login == "admin") && reply == QMessageBox::Yes)
+            {
+            query.prepare("DELETE FROM `Gabinet`.`uzytkownik` WHERE uzytkownik_id = '" +  QString::number(id_rekordu) + "';");
+            clearRecord();
+            }
+
+            if( !query.exec() )
+            {
+                //******DEBUG_LOG*******
+                #ifdef LOG
+                qDebug() << "Failed to add tag";
+                #endif
+                //**********************
+
+                //qFatal( "Failed to add tag" );
+            }
+
+
+           if(!baza.commit())
+           {
+               //******DEBUG_LOG*******
+               #ifdef LOG
+               qDebug()<<"Failed to commit";
+               #endif
+               //**********************
+
+               baza.rollback();
+           }
+
+           //******DEBUG_LOG*******
+           #ifdef LOG
+           qDebug() << "Inserted using Qt Transaction";
+           #endif
+           //**********************
+
+        }
+        else
+        {
+            //******DEBUG_LOG*******
+            #ifdef LOG
+            qDebug() << "Failed to start transaction mode";
+            #endif
+            //**********************
+        }
+
+        baza.close();
+    }
+
+    showRecords();
+}
+
+void Program::showRecords()
+{
+
+    QSqlDatabase baza;
+
+    baza = QSqlDatabase::addDatabase("QMYSQL");
+
+    LaczenieDoSQL(&baza);
+
+    baza.open();
+
+    queryModel = new QSqlQueryModel(this);
+
+    queryModel->setQuery("SELECT uzytkownik_id, imie, nazwisko, uzytkownik_nazwa AS login, pracownik FROM uzytkownik ORDER BY nazwisko;");
+
+    try {
+
+        this->ui->dgUzytkownicy->setModel(queryModel);
+
+        this->ui->dgUzytkownicy->setSelectionBehavior(QAbstractItemView::SelectRows); //zaznaczanie calego wiersza
+
+        this->ui->dgUzytkownicy->hideColumn(0); //chowanie kolumny z id
+
+        baza.close();
+
+    } catch (const std::exception &e)
+    {
+
+        //******DEBUG_LOG*******
+        #ifdef LOG
+        qDebug()<<"Blad polaczenia z baza danych! :: program.cpp";
+        qDebug() << "ERROR load: " << baza.lastError().text();
+        #endif
+        //**********************
+
+        QMessageBox msgBox;
+
+        msgBox.setWindowTitle("ERROR");
+
+        msgBox.setInformativeText("Blad polaczenia z baza danych");
+
+        msgBox.setStandardButtons(QMessageBox::Retry | QMessageBox::Close);
+
+        msgBox.setDefaultButton(QMessageBox::Retry);
+
+        int ret = msgBox.exec();
+    }
+
+    baza.close();
+}
+
+void Program::clearRecord()
+{
+    this->ui->txtPImie->clear();
+
+    this->ui->txtPNazwisko->clear();
+
+    this->ui->txtPLogin->clear();
+
+    this->ui->cbP->setChecked(false);
+}
+
+
+void Program::on_cbP_stateChanged(int arg1)
+{;
+    Qt::CheckState result = this->ui->cbP->checkState();
+    if(result == Qt::Checked)
+    {
+        this->ui->boxGodiznyPracy->setEnabled(1);
+    }
+    else
+    {
+        this->ui->boxGodiznyPracy->setEnabled(0);
+        this->ui->boxGodiznyPracy->setVisible(0);
+    }
+}
 

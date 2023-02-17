@@ -49,7 +49,7 @@
      <property name="geometry">
       <rect>
        <x>20</x>
-       <y>40</y>
+       <y>10</y>
        <width>91</width>
        <height>51</height>
       </rect>
@@ -61,8 +61,8 @@
     <widget class="QLineEdit" name="txtPSzukaj">
      <property name="geometry">
       <rect>
-       <x>130</x>
-       <y>50</y>
+       <x>120</x>
+       <y>20</y>
        <width>171</width>
        <height>31</height>
       </rect>
@@ -71,8 +71,8 @@
     <widget class="QPushButton" name="btnPSzukaj">
      <property name="geometry">
       <rect>
-       <x>340</x>
-       <y>50</y>
+       <x>330</x>
+       <y>20</y>
        <width>87</width>
        <height>26</height>
       </rect>
@@ -85,13 +85,13 @@
      <property name="geometry">
       <rect>
        <x>20</x>
-       <y>110</y>
+       <y>60</y>
        <width>441</width>
        <height>231</height>
       </rect>
      </property>
      <property name="title">
-      <string>Edycja danych użytkownika</string>
+      <string>Edycja danych użytkownika:</string>
      </property>
      <widget class="QLabel" name="label_5">
       <property name="geometry">
@@ -177,6 +177,9 @@
      </widget>
     </widget>
     <widget class="QPushButton" name="btnPusun">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
      <property name="geometry">
       <rect>
        <x>20</x>
@@ -190,6 +193,9 @@
      </property>
     </widget>
     <widget class="QPushButton" name="btnPmodyfikuj">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
      <property name="geometry">
       <rect>
        <x>200</x>
@@ -214,6 +220,252 @@
      <property name="text">
       <string>dodaj</string>
      </property>
+    </widget>
+    <widget class="QGroupBox" name="boxGodiznyPracy">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>300</y>
+       <width>481</width>
+       <height>211</height>
+      </rect>
+     </property>
+     <property name="title">
+      <string>Godziny pracy:</string>
+     </property>
+     <widget class="QLabel" name="label_8">
+      <property name="geometry">
+       <rect>
+        <x>35</x>
+        <y>30</y>
+        <width>111</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>PONIEDZIAŁEK:</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="ponOd">
+      <property name="geometry">
+       <rect>
+        <x>150</x>
+        <y>30</y>
+        <width>71</width>
+        <height>26</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="ponDo">
+      <property name="geometry">
+       <rect>
+        <x>250</x>
+        <y>30</y>
+        <width>71</width>
+        <height>26</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_9">
+      <property name="geometry">
+       <rect>
+        <x>40</x>
+        <y>70</y>
+        <width>66</width>
+        <height>18</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>WTOREK:</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="wtDo">
+      <property name="geometry">
+       <rect>
+        <x>250</x>
+        <y>70</y>
+        <width>71</width>
+        <height>26</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="wtOd">
+      <property name="geometry">
+       <rect>
+        <x>150</x>
+        <y>70</y>
+        <width>71</width>
+        <height>26</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_10">
+      <property name="geometry">
+       <rect>
+        <x>40</x>
+        <y>110</y>
+        <width>66</width>
+        <height>18</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string> ŚRODA:</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="srDo">
+      <property name="geometry">
+       <rect>
+        <x>250</x>
+        <y>110</y>
+        <width>71</width>
+        <height>26</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="srOd">
+      <property name="geometry">
+       <rect>
+        <x>150</x>
+        <y>110</y>
+        <width>71</width>
+        <height>26</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_11">
+      <property name="geometry">
+       <rect>
+        <x>40</x>
+        <y>150</y>
+        <width>101</width>
+        <height>18</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>CZWARTEK:</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="czwDo">
+      <property name="geometry">
+       <rect>
+        <x>250</x>
+        <y>140</y>
+        <width>71</width>
+        <height>26</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="czwOd">
+      <property name="geometry">
+       <rect>
+        <x>150</x>
+        <y>140</y>
+        <width>71</width>
+        <height>26</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_12">
+      <property name="geometry">
+       <rect>
+        <x>40</x>
+        <y>180</y>
+        <width>66</width>
+        <height>18</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>PIĄTEK:</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="ptDo">
+      <property name="geometry">
+       <rect>
+        <x>250</x>
+        <y>180</y>
+        <width>71</width>
+        <height>26</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="ptOd">
+      <property name="geometry">
+       <rect>
+        <x>150</x>
+        <y>180</y>
+        <width>71</width>
+        <height>26</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QGroupBox" name="boxGPSzablony">
+      <property name="geometry">
+       <rect>
+        <x>340</x>
+        <y>30</y>
+        <width>121</width>
+        <height>171</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>SZABLONY</string>
+      </property>
+      <widget class="QPushButton" name="btn7_15">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>30</y>
+         <width>87</width>
+         <height>26</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>7-15</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="btn8_16">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>60</y>
+         <width>87</width>
+         <height>26</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>8-16</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="btn9_17">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>90</y>
+         <width>87</width>
+         <height>26</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>9-17</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="btn10_18">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>120</y>
+         <width>87</width>
+         <height>26</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>10-18</string>
+       </property>
+      </widget>
+     </widget>
     </widget>
    </widget>
    <widget class="QWidget" name="tabHaslo">

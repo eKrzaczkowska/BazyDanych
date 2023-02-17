@@ -55,6 +55,12 @@ private slots:
     void on_btnPdodaj_clicked();
 
 
+    void on_btnPmodyfikuj_clicked();
+
+    void on_btnPusun_clicked();
+
+    void on_cbP_stateChanged(int arg1);
+
 private:
 
     struct Uzytkownik
@@ -69,6 +75,10 @@ private:
     void PobieranieDanych(QString nazwaUzytkownikaLog, struct Uzytkownik *uzytkownik);
 
     void btnZmien_pokaz();
+
+    void showRecords();
+
+    void clearRecord();
 
     Ui::Program *ui;
 
