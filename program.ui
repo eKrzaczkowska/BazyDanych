@@ -249,7 +249,7 @@
        <string>PONIEDZIAŁEK:</string>
       </property>
      </widget>
-     <widget class="QLineEdit" name="ponOd">
+     <widget class="QLineEdit" name="txtponOd">
       <property name="geometry">
        <rect>
         <x>150</x>
@@ -259,7 +259,7 @@
        </rect>
       </property>
      </widget>
-     <widget class="QLineEdit" name="ponDo">
+     <widget class="QLineEdit" name="txtponDo">
       <property name="geometry">
        <rect>
         <x>250</x>
@@ -282,7 +282,7 @@
        <string>WTOREK:</string>
       </property>
      </widget>
-     <widget class="QLineEdit" name="wtDo">
+     <widget class="QLineEdit" name="txtwtDo">
       <property name="geometry">
        <rect>
         <x>250</x>
@@ -292,7 +292,7 @@
        </rect>
       </property>
      </widget>
-     <widget class="QLineEdit" name="wtOd">
+     <widget class="QLineEdit" name="txtwtOd">
       <property name="geometry">
        <rect>
         <x>150</x>
@@ -315,7 +315,7 @@
        <string> ŚRODA:</string>
       </property>
      </widget>
-     <widget class="QLineEdit" name="srDo">
+     <widget class="QLineEdit" name="txtsrDo">
       <property name="geometry">
        <rect>
         <x>250</x>
@@ -325,7 +325,7 @@
        </rect>
       </property>
      </widget>
-     <widget class="QLineEdit" name="srOd">
+     <widget class="QLineEdit" name="txtsrOd">
       <property name="geometry">
        <rect>
         <x>150</x>
@@ -348,7 +348,7 @@
        <string>CZWARTEK:</string>
       </property>
      </widget>
-     <widget class="QLineEdit" name="czwDo">
+     <widget class="QLineEdit" name="txtczwDo">
       <property name="geometry">
        <rect>
         <x>250</x>
@@ -358,7 +358,7 @@
        </rect>
       </property>
      </widget>
-     <widget class="QLineEdit" name="czwOd">
+     <widget class="QLineEdit" name="txtczwOd">
       <property name="geometry">
        <rect>
         <x>150</x>
@@ -381,7 +381,7 @@
        <string>PIĄTEK:</string>
       </property>
      </widget>
-     <widget class="QLineEdit" name="ptDo">
+     <widget class="QLineEdit" name="txtptDo">
       <property name="geometry">
        <rect>
         <x>250</x>
@@ -391,7 +391,7 @@
        </rect>
       </property>
      </widget>
-     <widget class="QLineEdit" name="ptOd">
+     <widget class="QLineEdit" name="txtptOd">
       <property name="geometry">
        <rect>
         <x>150</x>

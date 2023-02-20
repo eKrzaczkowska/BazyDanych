@@ -335,6 +335,33 @@ void Program::on_dgUzytkownicy_clicked(const QModelIndex &index)
         //**********************
 
         this->ui->cbP->setChecked(true);
+
+        QSqlDatabase baza;
+
+        baza = QSqlDatabase::addDatabase("QMYSQL");
+
+        LaczenieDoSQL(&baza);
+
+        baza.open();
+
+        QSqlQueryModel zapytanie;
+
+        zapytanie.setQuery("SELECT pon_od, pon_do, wt_od, wt_do, sr_od, sr_do, cz_od, cz_do, pt_od, pt_do FROM godziny WHERE uzytkownik_id = '" + QString::number(id_rekordu) + "';"); //SELECT * to oznacza ze wszystko
+
+        this->ui->txtponOd->setText(zapytanie.record(0).value("pon_od").toString());
+        this->ui->txtponDo->setText(zapytanie.record(0).value("pon_do").toString());
+        this->ui->txtwtOd->setText(zapytanie.record(0).value("wt_od").toString());
+        this->ui->txtwtDo->setText(zapytanie.record(0).value("wt_do").toString());
+        this->ui->txtsrOd->setText(zapytanie.record(0).value("sr_od").toString());
+        this->ui->txtsrDo->setText(zapytanie.record(0).value("sr_do").toString());
+        this->ui->txtczwOd->setText(zapytanie.record(0).value("cz_od").toString());
+        this->ui->txtczwDo->setText(zapytanie.record(0).value("cz_do").toString());
+        this->ui->txtptOd->setText(zapytanie.record(0).value("pt_od").toString());
+        this->ui->txtptDo->setText(zapytanie.record(0).value("pt_do").toString());
+
+        baza.close();
+
+        QSqlDatabase::removeDatabase(baza.connectionName());
     }
     else
     {
@@ -345,9 +372,22 @@ void Program::on_dgUzytkownicy_clicked(const QModelIndex &index)
         //**********************
 
         this->ui->cbP->setChecked(false);
+        this->ui->txtponOd->clear();
+        this->ui->txtponDo->clear();
+        this->ui->txtwtOd->clear();
+        this->ui->txtwtDo->clear();
+        this->ui->txtsrOd->clear();
+        this->ui->txtsrDo->clear();
+        this->ui->txtczwOd->clear();
+        this->ui->txtczwDo->clear();
+        this->ui->txtptOd->clear();
+        this->ui->txtptDo->clear();
+
     }
 
-   // baza.close();
+    showRecords();
+
+
 }
 
 //dodanie uzytkownikow do bazy na razie jest domyslne haslo 123 (zmienic dodać okienko?)
@@ -400,6 +440,32 @@ void Program::on_btnPdodaj_clicked()
                 //qFatal( "Failed to add tag" );
             }
 
+            if(pracownik == true){
+
+                query.prepare("INSERT INTO `Gabinet`.`godziny` (`uzytkownik_id`, `pon_od`, `pon_do`, `wt_od`, `wt_do`, `sr_od`, `sr_do`, `cz_od`, `cz_do`, `pt_od`, `pt_do`) "
+                              "VALUES (last_insert_id(), :pon_od, :pon_do, :wt_od, :wt_do, :sr_od, :sr_do, :cz_od, :cz_do, :pt_od, :pt_do);");
+                query.bindValue( ":pon_od",  this->ui->txtponOd->text() );
+                query.bindValue( ":pon_do", this->ui->txtponDo->text() );
+                query.bindValue( ":wt_od", this->ui->txtwtOd->text() );
+                query.bindValue( ":wt_do", this->ui->txtwtDo->text() );
+                query.bindValue( ":sr_od", this->ui->txtsrOd->text() );
+                query.bindValue( ":sr_do", this->ui->txtsrDo->text() );
+                query.bindValue( ":cz_od", this->ui->txtczwOd->text() );
+                query.bindValue( ":cz_do", this->ui->txtczwDo->text() );
+                query.bindValue( ":pt_od", this->ui->txtptOd->text() );
+                query.bindValue( ":pt_do", this->ui->txtptDo->text() );
+
+                if( !query.exec() )
+                {
+                    //******DEBUG_LOG*******
+                    #ifdef LOG
+                    qDebug() << "Failed to add tag";
+                    #endif
+                    //**********************
+
+                    //qFatal( "Failed to add tag" );
+                }
+            }
 
            if(!baza.commit())
            {
@@ -546,8 +612,24 @@ void Program::on_btnPusun_clicked()
 
             if(!(login == "admin") && reply == QMessageBox::Yes)
             {
+            query.prepare("DELETE FROM `Gabinet`.`godziny` WHERE uzytkownik_id = '" +  QString::number(id_rekordu) + "';");
+            query.exec();
             query.prepare("DELETE FROM `Gabinet`.`uzytkownik` WHERE uzytkownik_id = '" +  QString::number(id_rekordu) + "';");
+            query.exec();
             clearRecord();
+            }
+            else
+            {
+                QMessageBox msgBox;
+
+                msgBox.setWindowTitle("ERROR");
+
+                msgBox.setInformativeText("Blad usuniecia uzytkownika");
+
+                msgBox.setStandardButtons(QMessageBox::Retry);
+
+                //msgBox.setDefaultButton(QMessageBox::Retry);
+                int ret = msgBox.exec();
             }
 
             if( !query.exec() )
@@ -560,7 +642,6 @@ void Program::on_btnPusun_clicked()
 
                 //qFatal( "Failed to add tag" );
             }
-
 
            if(!baza.commit())
            {
@@ -655,6 +736,26 @@ void Program::clearRecord()
     this->ui->txtPLogin->clear();
 
     this->ui->cbP->setChecked(false);
+
+    this->ui->txtponOd->clear();
+
+    this->ui->txtponDo->clear();
+
+    this->ui->txtwtOd->clear();
+
+    this->ui->txtwtDo->clear();
+
+    this->ui->txtsrOd->clear();
+
+    this->ui->txtsrDo->clear();
+
+    this->ui->txtczwOd->clear();
+
+    this->ui->txtczwDo->clear();
+
+    this->ui->txtptOd->clear();
+
+    this->ui->txtptDo->clear();
 }
 
 
@@ -664,6 +765,7 @@ void Program::on_cbP_stateChanged(int arg1)
     if(result == Qt::Checked)
     {
         this->ui->boxGodiznyPracy->setEnabled(1);
+        this->ui->boxGodiznyPracy->setVisible(1);
     }
     else
     {
