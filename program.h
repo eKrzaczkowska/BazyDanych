@@ -54,7 +54,6 @@ private slots:
 
     void on_btnPdodaj_clicked();
 
-
     void on_btnPmodyfikuj_clicked();
 
     void on_btnPusun_clicked();
@@ -68,6 +67,16 @@ private slots:
     void on_btn9_17_clicked();
 
     void on_btn10_18_clicked();
+
+    void on_btnUSzukaj_clicked();
+
+    void on_btnUDodaj_clicked();
+
+    void on_btnUUsun_clicked();
+
+    void on_btnUModyfikuj_clicked();
+
+    void on_dgZabiegi_clicked(const QModelIndex &index);
 
 private:
 
@@ -89,6 +98,9 @@ private:
     void clearRecord();
 
     void czasPracy(QString poczatek, QString koniec);
+
+    void showUslugi();
+
     Ui::Program *ui;
 
 };

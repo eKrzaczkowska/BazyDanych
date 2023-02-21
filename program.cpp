@@ -66,6 +66,8 @@ Program::~Program()
     delete ui;
 }
 
+//--------------------------------------------------UZYTKOWNICY---------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------
 
 //Pobranie informacji o zalogowanym uzytkowniku
 void Program::PobieranieDanych(QString nazwaUzytkownikaLog, struct Uzytkownik *uzytkownik)
@@ -897,6 +899,14 @@ void Program::clearRecord()
     this->ui->txtptOd->clear();
 
     this->ui->txtptDo->clear();
+
+    this->ui->txtUcena->clear();
+
+    this->ui->txtUnazwa->clear();
+
+    this->ui->txtUczas->clear();
+
+    this->ui->txtUopis->clear();
 }
 
 
@@ -961,5 +971,388 @@ void Program::czasPracy(QString poczatek, QString koniec)
 
 }
 
+//---------------------------------------------------------------------USLUGI----------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------------------------------
 
 
+void Program::on_btnUSzukaj_clicked()
+{
+    showUslugi();
+}
+
+void Program::showUslugi()
+{
+    QSqlDatabase baza;
+
+    baza = QSqlDatabase::addDatabase("QMYSQL");
+
+    LaczenieDoSQL(&baza);
+
+    baza.open();
+
+    queryModel = new QSqlQueryModel(this);
+
+    queryModel->setQuery("SELECT * FROM uslugi WHERE nazwa LIKE '%"+ this->ui->txtUzabieg->text() +"%' ORDER BY nazwa;");
+
+    try {
+
+        this->ui->dgZabiegi->setModel(queryModel);
+
+        this->ui->dgZabiegi->setSelectionBehavior(QAbstractItemView::SelectRows); //zaznaczanie calego wiersza
+
+        this->ui->dgZabiegi->hideColumn(0); //chowanie kolumny z id
+
+        baza.close();
+
+    } catch (const std::exception &e)
+    {
+
+        //******DEBUG_LOG*******
+        #ifdef LOG
+        qDebug()<<"Blad polaczenia z baza danych! :: program.cpp";
+        qDebug() << "ERROR load: " << baza.lastError().text();
+        #endif
+        //**********************
+
+        QMessageBox msgBox;
+
+        msgBox.setWindowTitle("ERROR");
+
+        msgBox.setInformativeText("Blad polaczenia z baza danych");
+
+        msgBox.setStandardButtons(QMessageBox::Retry | QMessageBox::Close);
+
+        msgBox.setDefaultButton(QMessageBox::Retry);
+
+        int ret = msgBox.exec();
+    }
+
+    baza.close();
+}
+
+void Program::on_btnUDodaj_clicked()
+{
+    QString nazwa = this->ui->txtUnazwa->text();
+
+    QString cena = this->ui->txtUcena->text().replace(",","."); //przecinek nie jest uznawany przez typ DECIMAL(6,2) -> 6 cyfr z czego 2 po przecinku
+
+    QString czas = this->ui->txtUczas->text();
+
+    QString opis= this->ui->txtUopis->toPlainText();
+
+    //******DEBUG_LOG*******
+    #ifdef LOG
+    qDebug() << "Wpisane dane -> nazwa: " << nazwa << "cena: " << cena << "czas: " << czas << "opis: " << opis  ;
+    #endif
+    //**********************
+
+    {
+
+        QSqlDatabase baza;
+
+        baza = QSqlDatabase::addDatabase("QMYSQL");
+
+        LaczenieDoSQL(&baza);
+
+        baza.open();
+
+        if(baza.transaction())
+        {
+            if(nazwa.length()>=3 && cena.length()>=1 && czas.length() >=5)
+            {
+                QSqlQuery query(baza);
+
+                query.prepare("INSERT INTO `Gabinet`.`uslugi` (`nazwa`, `cena`, `czas`, `opis`) "
+                              "VALUES (:nazwa, :cena, :czas, :opis);");
+                query.bindValue( ":nazwa", nazwa);
+                query.bindValue( ":cena", cena );
+                query.bindValue( ":czas", czas );
+                query.bindValue( ":opis", opis );
+
+                if( !query.exec() )
+                {
+                    //******DEBUG_LOG*******
+                    #ifdef LOG
+                    qDebug() << "Failed to add tag";
+                    #endif
+                    //**********************
+
+                    //qFatal( "Failed to add tag" );
+                }
+                else
+                {
+                    QMessageBox msgBox;
+
+                    msgBox.setWindowTitle("WARNING");
+
+                    msgBox.setInformativeText("dodano uzytkownika");
+
+                    msgBox.setStandardButtons(QMessageBox::Ok);
+
+                    //msgBox.setDefaultButton(QMessageBox::Retry);
+                    int ret = msgBox.exec();
+                }
+
+               if(!baza.commit())
+               {
+                   //******DEBUG_LOG*******
+                   #ifdef LOG
+                   qDebug()<<"Failed to commit";
+                   #endif
+                   //**********************
+
+                   baza.rollback();
+               }
+
+               //******DEBUG_LOG*******
+               #ifdef LOG
+               qDebug() << "Inserted using Qt Transaction";
+               #endif
+               //**********************
+            }
+        }
+        else
+        {
+            //******DEBUG_LOG*******
+            #ifdef LOG
+            qDebug() << "Failed to start transaction mode";
+            #endif
+            //**********************
+        }
+
+        baza.close();
+    }
+
+    showUslugi();
+}
+
+
+void Program::on_btnUUsun_clicked()
+{
+   // QString login = this->ui->txtPLogin->text();
+
+    QSqlDatabase baza;
+
+    baza = QSqlDatabase::addDatabase("QMYSQL");
+
+    LaczenieDoSQL(&baza);
+
+    baza.open();
+
+    if(baza.transaction())
+    {
+
+        QMessageBox msgBox;
+
+        QMessageBox::StandardButton reply;
+
+        reply = msgBox.question(this, "WARRRNING", "Czy na pewno chcesz usunac ta usluge", QMessageBox::Yes | QMessageBox::No);
+
+        QSqlQuery query(baza);
+
+        if(reply == QMessageBox::Yes)
+        {
+            query.prepare("DELETE FROM `Gabinet`.`uslugi` WHERE uslugi_id = '" +  QString::number(id_rekordu) + "';");
+            query.exec();
+            clearRecord();
+
+            QMessageBox msgBox;
+
+            msgBox.setWindowTitle("WARNING");
+
+            msgBox.setInformativeText("usunieto usluge");
+
+            msgBox.setStandardButtons(QMessageBox::Ok);
+
+            //msgBox.setDefaultButton(QMessageBox::Retry);
+            int ret = msgBox.exec();
+        }
+        else
+        {
+            QMessageBox msgBox;
+
+            msgBox.setWindowTitle("ERROR");
+
+            msgBox.setInformativeText("Blad usuniecia uslugi");
+
+            msgBox.setStandardButtons(QMessageBox::Retry);
+
+            //msgBox.setDefaultButton(QMessageBox::Retry);
+            int ret = msgBox.exec();
+        }
+
+        if( !query.exec() )
+        {
+            //******DEBUG_LOG*******
+            #ifdef LOG
+            qDebug() << "Failed to add tag";
+            #endif
+            //**********************
+
+            //qFatal( "Failed to add tag" );
+        }
+
+       if(!baza.commit())
+       {
+           //******DEBUG_LOG*******
+           #ifdef LOG
+           qDebug()<<"Failed to commit";
+           #endif
+           //**********************
+
+           baza.rollback();
+       }
+
+       //******DEBUG_LOG*******
+       #ifdef LOG
+       qDebug() << "Inserted using Qt Transaction";
+       #endif
+       //**********************
+
+    }
+    else
+    {
+        //******DEBUG_LOG*******
+        #ifdef LOG
+        qDebug() << "Failed to start transaction mode";
+        #endif
+        //**********************
+    }
+
+    baza.close();
+
+    showUslugi();
+}
+
+
+void Program::on_btnUModyfikuj_clicked()
+{
+    QString nazwa = this->ui->txtUnazwa->text();
+
+    QString cena = this->ui->txtUcena->text().replace(",","."); //przecinek nie jest uznawany przez typ DECIMAL(6,2) -> 6 cyfr z czego 2 po przecinku
+
+    QString czas = this->ui->txtUczas->text();
+
+    QString opis= this->ui->txtUopis->toPlainText();
+    //******DEBUG_LOG*******
+    #ifdef LOG
+    qDebug() << "Wpisane dane -> nazwa: " << nazwa << "cena: " << cena << "czas: " << czas << "opis: " << opis  ;
+    #endif
+    //**********************
+
+    {
+
+        QSqlDatabase baza;
+
+        baza = QSqlDatabase::addDatabase("QMYSQL");
+
+        LaczenieDoSQL(&baza);
+
+        baza.open();
+
+        if(baza.transaction())
+        {
+
+
+            QSqlQuery query(baza);
+
+            query.prepare("UPDATE `Gabinet`.`uslugi` SET `nazwa` = '"+ nazwa +"', `cena` = '"+ cena +"', `czas` = '"+ czas +"', `opis` = "
+                          "'"+ opis +"' WHERE (`uslugi_id` = '"+ QString::number(id_rekordu) +"');");
+
+            if( !query.exec() )
+            {
+
+                //******DEBUG_LOG*******
+                #ifdef LOG
+                qDebug() << "Failed to add tag";
+                #endif
+                //**********************
+
+                //qFatal( "Failed to add tag" );
+            }
+            else
+            {
+                QMessageBox msgBox;
+
+                msgBox.setWindowTitle("WARNING");
+
+                msgBox.setInformativeText("zmodyfikowane dane uslugi");
+
+                msgBox.setStandardButtons(QMessageBox::Ok);
+
+                //msgBox.setDefaultButton(QMessageBox::Retry);
+                int ret = msgBox.exec();
+            }
+
+           if(!baza.commit())
+           {
+               //******DEBUG_LOG*******
+               #ifdef LOG
+               qDebug()<<"Failed to commit";
+               #endif
+               //**********************
+
+               baza.rollback();
+           }
+
+           //******DEBUG_LOG*******
+           #ifdef LOG
+           qDebug() << "Inserted using Qt Transaction";
+           #endif
+           //**********************
+
+        }
+        else
+        {
+            //******DEBUG_LOG*******
+            #ifdef LOG
+            qDebug() << "Failed to start transaction mode";
+            #endif
+            //**********************
+        }
+
+        baza.close();
+    }
+
+    showUslugi();
+}
+
+
+void Program::on_dgZabiegi_clicked(const QModelIndex &index)
+{
+    this->ui->btnUModyfikuj->setEnabled(1);
+
+    this->ui->btnUUsun->setEnabled(1);
+
+    //dobranie się do numeru id kliknietego wiersza i do aktualnie nacisnietej komorki
+    //QString currentCell = this->ui->dgUzytkownicy->currentIndex().data(Qt::DisplayRole).toString();
+    id_rekordu = this->ui->dgZabiegi->selectionModel()->selectedIndexes().at(0).data(Qt::DisplayRole).toInt();
+
+    //******DEBUG_LOG*******
+    #ifdef LOG
+    //qDebug() << "nacisnieta komorka: " << currentCell;
+    qDebug() << "komorka o numerze id: " <<  id_rekordu;
+    #endif
+    //**********************
+
+    QString tabNazwa = this->ui->dgZabiegi->selectionModel()->selectedIndexes().at(1).data(Qt::DisplayRole).toString();
+
+    QString tabCena = this->ui->dgZabiegi->selectionModel()->selectedIndexes().at(2).data(Qt::DisplayRole).toString();
+
+    QString tabCzas = this->ui->dgZabiegi->selectionModel()->selectedIndexes().at(3).data(Qt::DisplayRole).toString();
+
+    QString tabOpis = this->ui->dgZabiegi->selectionModel()->selectedIndexes().at(4).data(Qt::DisplayRole).toString();
+
+    this->ui->txtUnazwa->setText(tabNazwa);
+
+    this->ui->txtUcena->setText(tabCena);
+
+    this->ui->txtUczas->setText(tabCzas);
+
+    this->ui->txtUopis->setPlainText(tabOpis);
+
+    showUslugi();
+
+}
+
+//usuniecie w usluach dziala i modyfikacja gdy juz nie ma uslug trzeba na to sie  uodpornic
