@@ -534,6 +534,8 @@ void Program::on_btnPmodyfikuj_clicked()
 
         if(baza.transaction())
         {
+
+
             QSqlQuery query(baza);
 
             query.prepare("UPDATE `Gabinet`.`uzytkownik` SET `imie` = '"+ imie +"', `nazwisko` = '"+ nazwisko +"', `uzytkownik_nazwa` = '"+ login +"', `pracownik` = "
@@ -550,6 +552,69 @@ void Program::on_btnPmodyfikuj_clicked()
 
                 //qFatal( "Failed to add tag" );
             }
+
+            QSqlQuery zapytanie;
+
+            zapytanie.prepare("SELECT * FROM godziny WHERE uzytkownik_id = '" + QString::number(id_rekordu) + "';"); //SELECT * to oznacza ze wszystko
+            zapytanie.exec();
+
+            if((zapytanie.size() != 0) && (pracownik== true) )
+            {
+                qDebug() << "jest rekord";
+
+                QString ponP =  this->ui->txtponOd->text();
+                QString ponK = this->ui->txtponDo->text();
+                QString wtP = this->ui->txtwtOd->text();
+                QString wtK = this->ui->txtwtDo->text();
+                QString srP = this->ui->txtsrOd->text();
+                QString srK = this->ui->txtsrDo->text();
+                QString czP = this->ui->txtczwOd->text();
+                QString czK = this->ui->txtczwDo->text();
+                QString ptP = this->ui->txtptOd->text();
+                QString ptK = this->ui->txtptDo->text();
+
+                query.prepare("UPDATE `Gabinet`.`godziny` SET `pon_od` = '"+ ponP +"', `pon_do` = '"+ ponK +"', `wt_od` = '"+ wtP +"', `wt_do` = '"+ wtK +"', `sr_od` = '"+ srP +"', `sr_do` = '"+ srK +"'"
+                              ", `cz_od` = '"+ czP +"', `cz_do` = '"+ czK +"', `pt_od` = '"+ ptP +"', `pt_do` = '"+ ptK +"' WHERE uzytkownik_id = '" + QString::number(id_rekordu) + "';");
+
+                if( !query.exec() )
+                {
+                    //******DEBUG_LOG*******
+                    #ifdef LOG
+                    qDebug() << "Failed to add tag";
+                    #endif
+                    //**********************
+
+                    //qFatal( "Failed to add tag" );
+                }
+            }
+            else if(pracownik== true)
+            {
+                query.prepare("INSERT INTO `Gabinet`.`godziny` (`uzytkownik_id`, `pon_od`, `pon_do`, `wt_od`, `wt_do`, `sr_od`, `sr_do`, `cz_od`, `cz_do`, `pt_od`, `pt_do`) "
+                              "VALUES ("+ QString::number(id_rekordu)  +", :pon_od, :pon_do, :wt_od, :wt_do, :sr_od, :sr_do, :cz_od, :cz_do, :pt_od, :pt_do);");
+                query.bindValue( ":pon_od",  this->ui->txtponOd->text() );
+                query.bindValue( ":pon_do", this->ui->txtponDo->text() );
+                query.bindValue( ":wt_od", this->ui->txtwtOd->text() );
+                query.bindValue( ":wt_do", this->ui->txtwtDo->text() );
+                query.bindValue( ":sr_od", this->ui->txtsrOd->text() );
+                query.bindValue( ":sr_do", this->ui->txtsrDo->text() );
+                query.bindValue( ":cz_od", this->ui->txtczwOd->text() );
+                query.bindValue( ":cz_do", this->ui->txtczwDo->text() );
+                query.bindValue( ":pt_od", this->ui->txtptOd->text() );
+                query.bindValue( ":pt_do", this->ui->txtptDo->text() );
+
+                if( !query.exec() )
+                {
+                    //******DEBUG_LOG*******
+                    #ifdef LOG
+                    qDebug() << "Failed to add tag";
+                    #endif
+                    //**********************
+
+                    //qFatal( "Failed to add tag" );
+                }
+                qDebug() << " nie ma rekordu";
+            }
+
 
 
            if(!baza.commit())
