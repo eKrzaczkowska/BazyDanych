@@ -244,7 +244,11 @@ void Program::on_btnHZmien_clicked()
 //Pobieranie rekordów z SQL do tablicy wynikow
 void Program::on_btnPSzukaj_clicked()
 {
+    UzytkownicySzukaj();
+}
 
+void Program::UzytkownicySzukaj()
+{
 
     QSqlDatabase baza;
 
@@ -292,8 +296,6 @@ void Program::on_btnPSzukaj_clicked()
     }
 
     baza.close();
-
-
 }
 
 //zachowanie na klikniecia wiersza w tabeli
@@ -1355,4 +1357,185 @@ void Program::on_dgZabiegi_clicked(const QModelIndex &index)
 
 }
 
-//usuniecie w usluach dziala i modyfikacja gdy juz nie ma uslug trzeba na to sie  uodpornic
+//usuniecie w usluach dziala i modyfikacja gdy juz nie ma uslug trzeba na to sie  uodpornic i optymalizacja kodu jezeli powtarzajacy sie kod np. wyszukiwanie i wrzucanie do siatki
+
+void Program::on_btnPUSzukaj_clicked()
+{
+    pokaszPracownikow();
+}
+
+void Program::pokaszPracownikow()
+{
+    QSqlDatabase baza;
+
+    baza = QSqlDatabase::addDatabase("QMYSQL");
+
+    LaczenieDoSQL(&baza);
+
+    baza.open();
+
+    queryModel = new QSqlQueryModel(this);
+
+    queryModel->setQuery("SELECT uzytkownik_id, imie, nazwisko, uzytkownik_nazwa AS login, pracownik FROM uzytkownik WHERE CONCAT(imie, ' ', nazwisko, uzytkownik_nazwa) LIKE '%"+ this->ui->txtPSzukaj->text() +"%' AND pracownik = '1' ORDER BY nazwisko;");
+
+    try {
+
+        this->ui->dgPUPracownicy->setModel(queryModel);
+
+        this->ui->dgPUPracownicy->setSelectionBehavior(QAbstractItemView::SelectRows); //zaznaczanie calego wiersza
+
+        this->ui->dgPUPracownicy->hideColumn(0); //chowanie kolumny z id
+
+        this->ui->dgPUPracownicy->
+
+        baza.close();
+
+    } catch (const std::exception &e)
+    {
+
+        //******DEBUG_LOG*******
+        #ifdef LOG
+        qDebug()<<"Blad polaczenia z baza danych! :: program.cpp";
+        qDebug() << "ERROR load: " << baza.lastError().text();
+        #endif
+        //**********************
+
+        QMessageBox msgBox;
+
+        msgBox.setWindowTitle("ERROR");
+
+        msgBox.setInformativeText("Blad polaczenia z baza danych");
+
+        msgBox.setStandardButtons(QMessageBox::Retry | QMessageBox::Close);
+
+        msgBox.setDefaultButton(QMessageBox::Retry);
+
+        int ret = msgBox.exec();
+    }
+
+    baza.close();
+
+}
+
+
+
+void Program::on_dgPUPracownicy_clicked(const QModelIndex &index)
+{
+    //wyszukiwanie uslugi ktore wykonuje pracownik
+    //dobranie się do numeru id kliknietego wiersza i do aktualnie nacisnietej komorki
+    //QString currentCell = this->ui->dgUzytkownicy->currentIndex().data(Qt::DisplayRole).toString();
+    id_rekordu = this->ui->dgPUPracownicy->selectionModel()->selectedIndexes().at(0).data(Qt::DisplayRole).toInt();
+
+    //******DEBUG_LOG*******
+    #ifdef LOG
+    //qDebug() << "nacisnieta komorka: " << currentCell;
+    qDebug() << "komorka o numerze id: " <<  id_rekordu;
+    #endif
+    //**********************
+
+    QString tabNazwa = this->ui->dgPUPracownicy->selectionModel()->selectedIndexes().at(1).data(Qt::DisplayRole).toString();
+
+    QString tabNazwisko = this->ui->dgPUPracownicy->selectionModel()->selectedIndexes().at(2).data(Qt::DisplayRole).toString();
+
+    this->ui->txtPUImie->setText(tabNazwa);
+
+    this->ui->txtPUNazwisko->setText(tabNazwisko);
+
+    //Wypelnianie uslug pracownika
+
+    PokazUslugi();
+
+    //pokaszPracownikow();
+
+}
+
+void Program::PokazUslugi()
+{
+    QSqlDatabase baza;
+
+    baza = QSqlDatabase::addDatabase("QMYSQL");
+
+    LaczenieDoSQL(&baza);
+
+    baza.open();
+
+    QSqlTableModel *model = new QSqlTableModel;
+
+    model->setTable("uslugi");
+    model->select();
+
+    try {
+
+        this->ui->dgPUDodajUsluge->setModel(model);
+
+        this->ui->dgPUDodajUsluge->setSelectionBehavior(QAbstractItemView::SelectRows); //zaznaczanie calego wiersza
+
+        this->ui->dgPUDodajUsluge->hideColumn(0); //chowanie kolumny z id
+
+        this->ui->dgPUDodajUsluge->show();
+
+        baza.close();
+
+    } catch (const std::exception &e)
+    {
+
+        //******DEBUG_LOG*******
+        #ifdef LOG
+        qDebug()<<"Blad polaczenia z baza danych! :: program.cpp";
+        qDebug() << "ERROR load: " << baza.lastError().text();
+        #endif
+        //**********************
+
+        QMessageBox msgBox;
+
+        msgBox.setWindowTitle("ERROR");
+
+        msgBox.setInformativeText("Blad polaczenia z baza danych");
+
+        msgBox.setStandardButtons(QMessageBox::Retry | QMessageBox::Close);
+
+        msgBox.setDefaultButton(QMessageBox::Retry);
+
+        int ret = msgBox.exec();
+    }
+
+    baza.close();
+}
+/* queryModel = new QSqlQueryModel(this);
+
+ queryModel->setQuery("SELECT uslugi.uslugi_id, uslugi.nazwa, uslugi.cena, uslugi.czas FROM uslugi, uzytkownik_usluga WHERE "
+                      "uslugi.uslugi_id = uzytkownik_usluga.uslugi_id AND uzytkownik_usluga.uzytkownik_id = "+ QString::number(id_rekordu) +"ORDER BY nazwa;");
+
+ try {
+
+     this->ui->dgPUUslugi->setModel(queryModel);
+
+     this->ui->dgPUUslugi->setSelectionBehavior(QAbstractItemView::SelectRows); //zaznaczanie calego wiersza
+
+     //this->ui->dgPUUslugi->hideColumn(0); //chowanie kolumny z id
+
+ } catch (const std::exception &e)
+ {
+
+     //******DEBUG_LOG*******
+     #ifdef LOG
+     qDebug()<<"Blad polaczenia z baza danych! :: program.cpp";
+     qDebug() << "ERROR load: " << baza.lastError().text();
+     #endif
+     //**********************
+
+     QMessageBox msgBox;
+
+     msgBox.setWindowTitle("ERROR");
+
+     msgBox.setInformativeText("Blad polaczenia z baza danych");
+
+     msgBox.setStandardButtons(QMessageBox::Retry | QMessageBox::Close);
+
+     msgBox.setDefaultButton(QMessageBox::Retry);
+
+     int ret = msgBox.exec();
+ }
+
+ //Wypelnianie wszytskich uslug*/
+

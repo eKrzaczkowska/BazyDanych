@@ -78,6 +78,10 @@ private slots:
 
     void on_dgZabiegi_clicked(const QModelIndex &index);
 
+    void on_btnPUSzukaj_clicked();
+
+    void on_dgPUPracownicy_clicked(const QModelIndex &index);
+
 private:
 
     struct Uzytkownik
@@ -100,6 +104,12 @@ private:
     void czasPracy(QString poczatek, QString koniec);
 
     void showUslugi();
+
+    void UzytkownicySzukaj();
+
+    void pokaszPracownikow();
+
+    void PokazUslugi();
 
     Ui::Program *ui;
 
