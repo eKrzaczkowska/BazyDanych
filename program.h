@@ -61,6 +61,14 @@ private slots:
 
     void on_cbP_stateChanged(int arg1);
 
+    void on_btn7_15_clicked();
+
+    void on_btn8_16_clicked();
+
+    void on_btn9_17_clicked();
+
+    void on_btn10_18_clicked();
+
 private:
 
     struct Uzytkownik
@@ -80,6 +88,7 @@ private:
 
     void clearRecord();
 
+    void czasPracy(QString poczatek, QString koniec);
     Ui::Program *ui;
 
 };

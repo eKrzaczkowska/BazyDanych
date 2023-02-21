@@ -439,6 +439,19 @@ void Program::on_btnPdodaj_clicked()
 
                 //qFatal( "Failed to add tag" );
             }
+            else
+            {
+                QMessageBox msgBox;
+
+                msgBox.setWindowTitle("WARNING");
+
+                msgBox.setInformativeText("dodano uzytkownika");
+
+                msgBox.setStandardButtons(QMessageBox::Ok);
+
+                //msgBox.setDefaultButton(QMessageBox::Retry);
+                int ret = msgBox.exec();
+            }
 
             if(pracownik == true){
 
@@ -464,6 +477,19 @@ void Program::on_btnPdodaj_clicked()
                     //**********************
 
                     //qFatal( "Failed to add tag" );
+                }
+                else
+                {
+                    QMessageBox msgBox;
+
+                    msgBox.setWindowTitle("WARNING");
+
+                    msgBox.setInformativeText("dodano sekcje godizny");
+
+                    msgBox.setStandardButtons(QMessageBox::Ok);
+
+                    //msgBox.setDefaultButton(QMessageBox::Retry);
+                    int ret = msgBox.exec();
                 }
             }
 
@@ -552,6 +578,19 @@ void Program::on_btnPmodyfikuj_clicked()
 
                 //qFatal( "Failed to add tag" );
             }
+            else
+            {
+                QMessageBox msgBox;
+
+                msgBox.setWindowTitle("WARNING");
+
+                msgBox.setInformativeText("zmodyfikowane dane uytkownika");
+
+                msgBox.setStandardButtons(QMessageBox::Ok);
+
+                //msgBox.setDefaultButton(QMessageBox::Retry);
+                int ret = msgBox.exec();
+            }
 
             QSqlQuery zapytanie;
 
@@ -586,6 +625,19 @@ void Program::on_btnPmodyfikuj_clicked()
 
                     //qFatal( "Failed to add tag" );
                 }
+                else
+                {
+                    QMessageBox msgBox;
+
+                    msgBox.setWindowTitle("WARNING");
+
+                    msgBox.setInformativeText("zmodyfikowane dane uytkownika w sekcji godziny");
+
+                    msgBox.setStandardButtons(QMessageBox::Ok);
+
+                    //msgBox.setDefaultButton(QMessageBox::Retry);
+                    int ret = msgBox.exec();
+                }
             }
             else if(pracownik== true)
             {
@@ -611,6 +663,19 @@ void Program::on_btnPmodyfikuj_clicked()
                     //**********************
 
                     //qFatal( "Failed to add tag" );
+                }
+                else
+                {
+                    QMessageBox msgBox;
+
+                    msgBox.setWindowTitle("WARNING");
+
+                    msgBox.setInformativeText("dodano sekcje godizny do uzytkownika");
+
+                    msgBox.setStandardButtons(QMessageBox::Ok);
+
+                    //msgBox.setDefaultButton(QMessageBox::Retry);
+                    int ret = msgBox.exec();
                 }
                 qDebug() << " nie ma rekordu";
             }
@@ -682,6 +747,17 @@ void Program::on_btnPusun_clicked()
             query.prepare("DELETE FROM `Gabinet`.`uzytkownik` WHERE uzytkownik_id = '" +  QString::number(id_rekordu) + "';");
             query.exec();
             clearRecord();
+
+            QMessageBox msgBox;
+
+            msgBox.setWindowTitle("WARNING");
+
+            msgBox.setInformativeText("usunieto uzytkownika");
+
+            msgBox.setStandardButtons(QMessageBox::Ok);
+
+            //msgBox.setDefaultButton(QMessageBox::Retry);
+            int ret = msgBox.exec();
             }
             else
             {
@@ -838,4 +914,52 @@ void Program::on_cbP_stateChanged(int arg1)
         this->ui->boxGodiznyPracy->setVisible(0);
     }
 }
+
+//QVector<QString> czasStart = {this->ui->pon, "txtwtOd", "txtsrOd", "txtczwOd", "txtptOd"};
+
+
+//czy trzeba do trzech po :
+void Program::on_btn7_15_clicked()
+{
+   czasPracy("07:00:00", "15:00:00");
+}
+
+void Program::on_btn8_16_clicked()
+{
+    czasPracy("08:00:00", "16:00:00");
+}
+
+
+void Program::on_btn9_17_clicked()
+{
+    czasPracy("09:00:00", "17:00:00");
+}
+
+
+void Program::on_btn10_18_clicked()
+{
+    czasPracy("10:00:00", "18:00:00");
+}
+
+void Program::czasPracy(QString poczatek, QString koniec)
+{
+    QVector<QLineEdit*> czasStart {this->ui->txtponOd, this->ui->txtwtOd, this->ui->txtsrOd, this->ui->txtczwOd, this->ui->txtptOd};
+
+    QVector<QLineEdit*> czasKoniec {this->ui->txtponDo, this->ui->txtwtDo, this->ui->txtsrDo, this->ui->txtczwDo, this->ui->txtptDo};
+
+
+   for(int i = 0; i < czasStart.size(); i++)
+    {
+        czasStart[i]->setText(poczatek);
+    }
+
+   for(int i = 0; i < czasKoniec.size(); i++)
+    {
+        czasKoniec[i]->setText(koniec);
+    }
+
+
+}
+
+
 
