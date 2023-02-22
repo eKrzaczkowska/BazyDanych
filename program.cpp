@@ -4,22 +4,6 @@
 //odznaczyc jezeli chcemy logi
 //#define LOG
 
-
-void Program::LaczenieDoSQL(QSqlDatabase *baza)
-{
-    //connecting to mysql
-
-    baza->setDatabaseName("Gabinet"); // ustawiam nazwę biblioteki, pod którą chcę się podpiąć
-
-    baza->setHostName("127.0.0.1"); // nazwa serwera
-
-    baza->setPassword("password"); // hasło
-
-    baza->setPort(3306); // port połączenia z bazą danych
-
-    baza->setUserName("root"); // nazwa użytkownika
-}
-
 Program::Program(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::Program)
@@ -35,6 +19,29 @@ Program::Program(QString nazwaUzytkownikaLog) :
     ui(new Ui::Program)
 {
     ui->setupUi(this);
+
+    //LACZENIE DO SQL
+
+    QSqlDatabase baza = QSqlDatabase::addDatabase("QMYSQL");
+
+    baza.setDatabaseName("Gabinet"); // ustawiam nazwę biblioteki, pod którą chcę się podpiąć
+
+    baza.setHostName("127.0.0.1"); // nazwa serwera
+
+    baza.setPassword("password"); // hasło
+
+    baza.setPort(3306); // port połączenia z bazą danych
+
+    baza.setUserName("root"); // nazwa użytkownika*/
+
+    //baza.setHostName("acidalia");
+
+    baza.open();
+
+    if(!baza.open())
+    {
+        qDebug() << "nie otwarta baza main";
+    }
 
     //tworzeni instancji uzytkownika
 
@@ -63,6 +70,17 @@ Program::Program(QString nazwaUzytkownikaLog) :
 
 Program::~Program()
 {
+    QSqlDatabase baza = QSqlDatabase::database();
+
+    if(!baza.open())
+    {
+        qDebug() << "nie otwarta";
+    }
+    else
+    {
+        baza.close();
+    }
+
     delete ui;
 }
 
@@ -72,13 +90,12 @@ Program::~Program()
 //Pobranie informacji o zalogowanym uzytkowniku
 void Program::PobieranieDanych(QString nazwaUzytkownikaLog, struct Uzytkownik *uzytkownik)
 {
-    QSqlDatabase baza;
+    QSqlDatabase baza = QSqlDatabase::database();
 
-    baza = QSqlDatabase::addDatabase("QMYSQL");
-
-    LaczenieDoSQL(&baza);
-
-    baza.open();
+    if(!baza.open())
+    {
+        qDebug() << "nie otwarta";
+    }
 
     QSqlQueryModel zapytanie;
 
@@ -103,10 +120,6 @@ void Program::PobieranieDanych(QString nazwaUzytkownikaLog, struct Uzytkownik *u
         uzytkownik->jestPracownikiem = true;
     }
 
-
-    baza.close();
-
-    QSqlDatabase::removeDatabase(baza.connectionName());
 }
 //~Pobranie informacji o zalogowanym uzytkowniku
 
@@ -159,14 +172,12 @@ void Program::on_btnHZmien_clicked()
 {
     bool czyTakieSame;
 
-    QSqlDatabase baza;
+    QSqlDatabase baza = QSqlDatabase::database();
 
-    baza = QSqlDatabase::addDatabase("QMYSQL");
-
-    LaczenieDoSQL(&baza);
-
-    baza.open();
-
+    if(!baza.open())
+    {
+        qDebug() << "nie otwarta";
+    }
 
     QSqlQueryModel zapytanie;
 
@@ -215,8 +226,6 @@ void Program::on_btnHZmien_clicked()
 
         int ret = msgBox.exec();
 
-        baza.close();
-
     } catch (const std::exception &e)
     {
         //******DEBUG_LOG*******
@@ -249,14 +258,12 @@ void Program::on_btnPSzukaj_clicked()
 
 void Program::UzytkownicySzukaj()
 {
+    QSqlDatabase baza = QSqlDatabase::database();
 
-    QSqlDatabase baza;
-
-    baza = QSqlDatabase::addDatabase("QMYSQL");
-
-    LaczenieDoSQL(&baza);
-
-    baza.open();
+    if(!baza.open())
+    {
+        qDebug() << "nie otwarta";
+    }
 
     queryModel = new QSqlQueryModel(this);
 
@@ -269,8 +276,6 @@ void Program::UzytkownicySzukaj()
         this->ui->dgUzytkownicy->setSelectionBehavior(QAbstractItemView::SelectRows); //zaznaczanie calego wiersza
 
         this->ui->dgUzytkownicy->hideColumn(0); //chowanie kolumny z id
-
-        baza.close();
 
     } catch (const std::exception &e)
     {
@@ -295,7 +300,6 @@ void Program::UzytkownicySzukaj()
         int ret = msgBox.exec();
     }
 
-    baza.close();
 }
 
 //zachowanie na klikniecia wiersza w tabeli
@@ -340,13 +344,12 @@ void Program::on_dgUzytkownicy_clicked(const QModelIndex &index)
 
         this->ui->cbP->setChecked(true);
 
-        QSqlDatabase baza;
+        QSqlDatabase baza = QSqlDatabase::database();
 
-        baza = QSqlDatabase::addDatabase("QMYSQL");
-
-        LaczenieDoSQL(&baza);
-
-        baza.open();
+        if(!baza.open())
+        {
+            qDebug() << "nie otwarta";
+        }
 
         QSqlQueryModel zapytanie;
 
@@ -363,9 +366,6 @@ void Program::on_dgUzytkownicy_clicked(const QModelIndex &index)
         this->ui->txtptOd->setText(zapytanie.record(0).value("pt_od").toString());
         this->ui->txtptDo->setText(zapytanie.record(0).value("pt_do").toString());
 
-        baza.close();
-
-        QSqlDatabase::removeDatabase(baza.connectionName());
     }
     else
     {
@@ -413,13 +413,12 @@ void Program::on_btnPdodaj_clicked()
 
     {
 
-        QSqlDatabase baza;
+        QSqlDatabase baza = QSqlDatabase::database();
 
-        baza = QSqlDatabase::addDatabase("QMYSQL");
-
-        LaczenieDoSQL(&baza);
-
-        baza.open();
+        if(!baza.open())
+        {
+            qDebug() << "nie otwarta";
+        }
 
         if(baza.transaction())
         {
@@ -524,7 +523,6 @@ void Program::on_btnPdodaj_clicked()
             //**********************
         }
 
-        baza.close();
     }
 
     showRecords();
@@ -553,14 +551,13 @@ void Program::on_btnPmodyfikuj_clicked()
     //**********************
 
     {
+        QSqlDatabase baza = QSqlDatabase::database();
 
-        QSqlDatabase baza;
+        if(!baza.open())
+        {
+            qDebug() << "nie otwarta";
+        }
 
-        baza = QSqlDatabase::addDatabase("QMYSQL");
-
-        LaczenieDoSQL(&baza);
-
-        baza.open();
 
         if(baza.transaction())
         {
@@ -713,7 +710,6 @@ void Program::on_btnPmodyfikuj_clicked()
             //**********************
         }
 
-        baza.close();
     }
 
     showRecords();
@@ -725,13 +721,12 @@ void Program::on_btnPusun_clicked()
     {
         QString login = this->ui->txtPLogin->text();
 
-        QSqlDatabase baza;
+        QSqlDatabase baza = QSqlDatabase::database();
 
-        baza = QSqlDatabase::addDatabase("QMYSQL");
-
-        LaczenieDoSQL(&baza);
-
-        baza.open();
+        if(!baza.open())
+        {
+            qDebug() << "nie otwarta";
+        }
 
         if(baza.transaction())
         {
@@ -814,8 +809,6 @@ void Program::on_btnPusun_clicked()
             #endif
             //**********************
         }
-
-        baza.close();
     }
 
     showRecords();
@@ -824,13 +817,12 @@ void Program::on_btnPusun_clicked()
 void Program::showRecords()
 {
 
-    QSqlDatabase baza;
+    QSqlDatabase baza = QSqlDatabase::database();
 
-    baza = QSqlDatabase::addDatabase("QMYSQL");
-
-    LaczenieDoSQL(&baza);
-
-    baza.open();
+    if(!baza.open())
+    {
+        qDebug() << "nie otwarta";
+    }
 
     queryModel = new QSqlQueryModel(this);
 
@@ -843,8 +835,6 @@ void Program::showRecords()
         this->ui->dgUzytkownicy->setSelectionBehavior(QAbstractItemView::SelectRows); //zaznaczanie calego wiersza
 
         this->ui->dgUzytkownicy->hideColumn(0); //chowanie kolumny z id
-
-        baza.close();
 
     } catch (const std::exception &e)
     {
@@ -868,8 +858,6 @@ void Program::showRecords()
 
         int ret = msgBox.exec();
     }
-
-    baza.close();
 }
 
 void Program::clearRecord()
@@ -984,13 +972,12 @@ void Program::on_btnUSzukaj_clicked()
 
 void Program::showUslugi()
 {
-    QSqlDatabase baza;
+    QSqlDatabase baza = QSqlDatabase::database();
 
-    baza = QSqlDatabase::addDatabase("QMYSQL");
-
-    LaczenieDoSQL(&baza);
-
-    baza.open();
+    if(!baza.open())
+    {
+        qDebug() << "nie otwarta";
+    }
 
     queryModel = new QSqlQueryModel(this);
 
@@ -1003,8 +990,6 @@ void Program::showUslugi()
         this->ui->dgZabiegi->setSelectionBehavior(QAbstractItemView::SelectRows); //zaznaczanie calego wiersza
 
         this->ui->dgZabiegi->hideColumn(0); //chowanie kolumny z id
-
-        baza.close();
 
     } catch (const std::exception &e)
     {
@@ -1029,7 +1014,6 @@ void Program::showUslugi()
         int ret = msgBox.exec();
     }
 
-    baza.close();
 }
 
 void Program::on_btnUDodaj_clicked()
@@ -1050,13 +1034,12 @@ void Program::on_btnUDodaj_clicked()
 
     {
 
-        QSqlDatabase baza;
+        QSqlDatabase baza = QSqlDatabase::database();
 
-        baza = QSqlDatabase::addDatabase("QMYSQL");
-
-        LaczenieDoSQL(&baza);
-
-        baza.open();
+        if(!baza.open())
+        {
+            qDebug() << "nie otwarta";
+        }
 
         if(baza.transaction())
         {
@@ -1121,8 +1104,6 @@ void Program::on_btnUDodaj_clicked()
             #endif
             //**********************
         }
-
-        baza.close();
     }
 
     showUslugi();
@@ -1133,13 +1114,12 @@ void Program::on_btnUUsun_clicked()
 {
    // QString login = this->ui->txtPLogin->text();
 
-    QSqlDatabase baza;
+    QSqlDatabase baza = QSqlDatabase::database();
 
-    baza = QSqlDatabase::addDatabase("QMYSQL");
-
-    LaczenieDoSQL(&baza);
-
-    baza.open();
+    if(!baza.open())
+    {
+        qDebug() << "nie otwarta";
+    }
 
     if(baza.transaction())
     {
@@ -1221,8 +1201,6 @@ void Program::on_btnUUsun_clicked()
         //**********************
     }
 
-    baza.close();
-
     showUslugi();
 }
 
@@ -1244,13 +1222,12 @@ void Program::on_btnUModyfikuj_clicked()
 
     {
 
-        QSqlDatabase baza;
+        QSqlDatabase baza = QSqlDatabase::database();
 
-        baza = QSqlDatabase::addDatabase("QMYSQL");
-
-        LaczenieDoSQL(&baza);
-
-        baza.open();
+        if(!baza.open())
+        {
+            qDebug() << "nie otwarta";
+        }
 
         if(baza.transaction())
         {
@@ -1313,7 +1290,6 @@ void Program::on_btnUModyfikuj_clicked()
             //**********************
         }
 
-        baza.close();
     }
 
     showUslugi();
@@ -1366,13 +1342,12 @@ void Program::on_btnPUSzukaj_clicked()
 
 void Program::pokaszPracownikow()
 {
-    QSqlDatabase baza;
+    QSqlDatabase baza = QSqlDatabase::database();
 
-    baza = QSqlDatabase::addDatabase("QMYSQL");
-
-    LaczenieDoSQL(&baza);
-
-    baza.open();
+    if(!baza.open())
+    {
+        qDebug() << "nie otwarta";
+    }
 
     queryModel = new QSqlQueryModel(this);
 
@@ -1386,9 +1361,6 @@ void Program::pokaszPracownikow()
 
         this->ui->dgPUPracownicy->hideColumn(0); //chowanie kolumny z id
 
-        this->ui->dgPUPracownicy->
-
-        baza.close();
 
     } catch (const std::exception &e)
     {
@@ -1412,8 +1384,6 @@ void Program::pokaszPracownikow()
 
         int ret = msgBox.exec();
     }
-
-    baza.close();
 
 }
 
@@ -1451,13 +1421,12 @@ void Program::on_dgPUPracownicy_clicked(const QModelIndex &index)
 
 void Program::PokazUslugi()
 {
-    QSqlDatabase baza;
+    QSqlDatabase baza = QSqlDatabase::database();
 
-    baza = QSqlDatabase::addDatabase("QMYSQL");
-
-    LaczenieDoSQL(&baza);
-
-    baza.open();
+    if(!baza.open())
+    {
+        qDebug() << "nie otwarta";
+    }
 
     QSqlTableModel *model = new QSqlTableModel;
 
@@ -1473,8 +1442,6 @@ void Program::PokazUslugi()
         this->ui->dgPUDodajUsluge->hideColumn(0); //chowanie kolumny z id
 
         this->ui->dgPUDodajUsluge->show();
-
-        baza.close();
 
     } catch (const std::exception &e)
     {
@@ -1498,8 +1465,6 @@ void Program::PokazUslugi()
 
         int ret = msgBox.exec();
     }
-
-    baza.close();
 }
 /* queryModel = new QSqlQueryModel(this);
 
@@ -1538,4 +1503,32 @@ void Program::PokazUslugi()
  }
 
  //Wypelnianie wszytskich uslug*/
+
+
+void Program::on_dgPUDodajUsluge_clicked(const QModelIndex &index)
+{
+    pokaszPracownikow();
+
+}
+
+void Program::on_dgPUPracownicy_activated(const QModelIndex &index)
+{
+
+}
+
+/*
+
+//QSqlDatabase db = QSqlDatabase::addDatabase("QPSQL");
+db.setHostName("acidalia");
+db.setDatabaseName("customdb");
+db.setUserName("mojito");
+db.setPassword("J0a1m8");
+bool ok = db.open();
+
+//to dodaemy jak otrzebuje uzywac bez open close ciglego open jest raz i close jest tez raz na koncu
+QSqlDatabase db = QSqlDatabase::database();
+
+*/
+
+//PRACOWNIK USLUGA - wyszukiwanie po literach nie zgadza sie -> bazy danych polaczenie po logowaniu pooprawic
 

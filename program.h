@@ -82,6 +82,10 @@ private slots:
 
     void on_dgPUPracownicy_clicked(const QModelIndex &index);
 
+    void on_dgPUDodajUsluge_clicked(const QModelIndex &index);
+
+    void on_dgPUPracownicy_activated(const QModelIndex &index);
+
 private:
 
     struct Uzytkownik
