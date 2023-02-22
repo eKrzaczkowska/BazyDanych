@@ -32,9 +32,7 @@ Program::Program(QString nazwaUzytkownikaLog) :
 
     baza.setPort(3306); // port połączenia z bazą danych
 
-    baza.setUserName("root"); // nazwa użytkownika*/
-
-    //baza.setHostName("acidalia");
+    baza.setUserName("root"); // nazwa użytkownika
 
     baza.open();
 

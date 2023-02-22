@@ -2,6 +2,8 @@
 #include "logowanie.h"
 #include "program.h"
 
+//#define LOG
+
 
 //okno LOGOWANIA
 logInWindow::logInWindow(QWidget *parent)
@@ -9,32 +11,10 @@ logInWindow::logInWindow(QWidget *parent)
     , ui(new Ui::logInWindow) 
 {
     ui->setupUi(this);
-}
 
-logInWindow::~logInWindow()
-{
-    delete ui;
-}
+    //LACZENIE DO SQL
 
-//po kliknieciu przyciku zaloguj
-void logInWindow::on_btnZaloguj_clicked()
-{
-    //Pobieranie info z text boxa
-    QString nazwaUzytkownikaLogowanie = ui->txtUzytkownik->text();
-
-    QString hasloLogowanie = ui->txtHaslo->text();
-
-    //**********************
-    //******DEBUG_LOG*******
-    //qDebug()<<"nazwa uzytkownika text box: "<< nazwaUzytkownikaLogowanie;
-    //qDebug()<<"haslo text box: "<< hasloLogowanie;
-    //**********************
-
-
-    //connecting to mysql
-    QSqlDatabase baza;
-
-    baza = QSqlDatabase::addDatabase("QMYSQL");
+    QSqlDatabase baza = QSqlDatabase::addDatabase("QMYSQL");
 
     baza.setDatabaseName("Gabinet"); // ustawiam nazwę biblioteki, pod którą chcę się podpiąć
 
@@ -46,29 +26,70 @@ void logInWindow::on_btnZaloguj_clicked()
 
     baza.setUserName("root"); // nazwa użytkownika
 
+    baza.open();
+
+    //******DEBUG_LOG*******
+    #ifdef LOG
+    if(!baza.open())
+    {
+        qDebug() << "Bazy danych nie udało się otworzyc :: logowanie.cpp";
+    }
+    else
+    {
+        qDebug() << "Baza danych otwarta :: logowanie.cpp";
+    }
+    #endif
+    //**********************
+
+}
+
+logInWindow::~logInWindow()
+{
+    delete ui;
+
+    QSqlDatabase baza = QSqlDatabase::database();
+
+    baza.close();
+
+    QSqlDatabase::removeDatabase(baza.connectionName());
+}
+
+//po kliknieciu przyciku zaloguj
+void logInWindow::on_btnZaloguj_clicked()
+{
+    //Pobieranie info z text boxa
+    QString nazwaUzytkownikaLogowanie = ui->txtUzytkownik->text();
+
+    QString hasloLogowanie = ui->txtHaslo->text();
+
+    //******DEBUG_LOG*******
+    #ifdef LOG
+        qDebug()<<"nazwa uzytkownika text box: "<< nazwaUzytkownikaLogowanie << " :: logowanie.cpp";
+        qDebug()<<"haslo text box: "<< hasloLogowanie << " :: logowanie.cpp";
+    #endif
+    //**********************
+
+    //connecting to mysql
+    QSqlDatabase baza = QSqlDatabase::database();
+
     try
     {
         bool zgodne = true;
 
         //sciaganie z bazy danych wszystkich rekordow uzytkownik_nazwa i haslo
-        baza.open();
 
         QSqlQuery zapytanie;
 
         zapytanie.exec("SELECT uzytkownik_nazwa, haslo FROM uzytkownik");
 
-        //inny sposob dostania sie do id uzytkownika
-        //zapytanie.exec("SELECT uzytkownik_id FROM uzytkownik WHERE uzytkownik_nazwa = '"+ui->txtUzytkownik->text()+"' AND haslo = '"+ui->txtHaslo->text()+"'");
-        //qDebug()<<"id uzytkownika: "<< zapytanie.value(0).toInt();
-
-
         while(zapytanie.next())
         {
 
-            //**********************
             //******DEBUG_LOG*******
-            //qDebug()<<"nazwa uzytkownika: "<<zapytanie.value(0).toString();
-            //qDebug()<<"haslo: "<<zapytanie.value(1).toString();
+            #ifdef LOG
+                qDebug()<<"nazwa uzytkownika: "<<zapytanie.value(0).toString()  << " :: logowanie.cpp";
+                qDebug()<<"haslo: "<<zapytanie.value(1).toString()  << " :: logowanie.cpp";
+            #endif
             //**********************
 
             QString nazwaUzytkownika = zapytanie.value(0).toString();
@@ -77,29 +98,21 @@ void logInWindow::on_btnZaloguj_clicked()
 
             if(nazwaUzytkownikaLogowanie == nazwaUzytkownika && hasloLogowanie == haslo)
             {
+                zgodne = true;
 
-                //**********************
                 //******DEBUG_LOG*******
-                //qDebug() << "Logowanie udane";
-                //**********************=
+                #ifdef LOG
+                    qDebug() << "Logowanie udane :: logowanie.cpp";
+                #endif
+                //**********************
 
                 this->hide();
-
-                baza.driver()->close();
-
-                baza.close();
-
-                QSqlDatabase::removeDatabase(baza.connectionName());
 
                 Program * mainWindow  = new Program(nazwaUzytkownika);
 
                 mainWindow->show();
 
-               // delete zapytanie;
-
                 delete this->ui;
-
-                //this->close();
 
             }
             else
@@ -108,16 +121,15 @@ void logInWindow::on_btnZaloguj_clicked()
             }
 
         }
-        //**********************
+
         //******DEBUG_LOG*******
-        //qDebug() << "Logowanie sie nie powiodlo";
+        #ifdef LOG
+            qDebug() << "Logowanie sie nie powiodlo :: logowanie.cpp";
+        #endif
         //**********************
 
         if(zgodne == false)
         {
-            baza.close();
-
-            QSqlDatabase::removeDatabase(baza.connectionName());
 
             QMessageBox msgBox;
 
@@ -136,11 +148,11 @@ void logInWindow::on_btnZaloguj_clicked()
 
     } catch (const std::exception &e)
     {
-
-        //**********************
         //******DEBUG_LOG*******
-        //qDebug()<<"Blad polaczenia z baza danych!";
-        //qDebug() << "ERROR load: " << baza.lastError().text();
+        #ifdef LOG
+            qDebug() <<"Blad polaczenia z baza danych! :: logowanie.cpp";
+            qDebug() << "ERROR load: " << baza.lastError().text();
+        #endif
         //**********************
 
         QMessageBox msgBox;
