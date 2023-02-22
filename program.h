@@ -84,6 +84,8 @@ private slots:
 
     void on_dgPUDodajUsluge_clicked(const QModelIndex &index);
 
+    void on_dgPUUslugi_clicked(const QModelIndex &index);
+
 private:
 
     /*struct Uzytkownik
@@ -120,6 +122,10 @@ private:
     void msgRetry(QString title, QString msg);
 
     void PokazUslugiPracownika();
+
+    void DodajUsluge();
+
+    void usunUsluge();
 
     Ui::Program *ui;
 

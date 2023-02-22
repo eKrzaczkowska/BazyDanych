@@ -1,8 +1,8 @@
 #include "program.h"
 #include "ui_program.h"
 
-//odznaczyc jezeli chcemy logi
-#define LOG
+//odkomentowac jezeli chcemy logi
+//#define LOG
 
 //zmienne globalne
 
@@ -11,6 +11,8 @@ QString nazwaUzytkownika;
 int id_rekordu;
 
 int id_uslugiDoDodania;
+
+int id_uslugiDoUsuniecia;
 
 //---------------------------------------GLOWNE OKNO----------------------------------------------------
 
@@ -682,7 +684,7 @@ void Program::on_btnPmodyfikuj_clicked()
 //usuniecie uzytkownika z zabezpieczeniem przed usuwaniem admina
 void Program::on_btnPusun_clicked()
 {
-    {
+
         QString login = this->ui->txtPLogin->text();
 
         QSqlDatabase baza = QSqlDatabase::database();
@@ -709,52 +711,51 @@ void Program::on_btnPusun_clicked()
 
             if(!(login == "admin") && reply == QMessageBox::Yes)
             {
-            query.prepare("DELETE FROM `Gabinet`.`godziny` WHERE uzytkownik_id = '" +  QString::number(id_rekordu) + "';");
+                query.prepare("DELETE FROM `Gabinet`.`godziny` WHERE uzytkownik_id = '" +  QString::number(id_rekordu) + "';");
 
-            query.exec();
+                query.exec();
 
-            query.prepare("DELETE FROM `Gabinet`.`uzytkownik` WHERE uzytkownik_id = '" +  QString::number(id_rekordu) + "';");
+                query.prepare("DELETE FROM `Gabinet`.`uzytkownik` WHERE uzytkownik_id = '" +  QString::number(id_rekordu) + "';");
 
-            query.exec();
+                if( !query.exec() )
+                {
+                    //******DEBUG_LOG*******
+                    #ifdef LOG
+                    qDebug() << "Failed to add tag :: program.cpp";
+                    #endif
+                    //**********************
 
-            clearRecord();
+                   msgRetry("ERROR", "USUWNAIE UZYTKOWNIKA SIE NIE POWIODLO BLAD LACZENIA Z BAZA");
+                }
+                else
+                {
+                    msgOK("WARNING", "USUNIETO UZYTKOWNIKA");
 
-            msgOK("WARNING", "USUNIETO UZYTKOWNIKA");
+                    clearRecord();
+                }
+
+               if(!baza.commit())
+               {
+                   //******DEBUG_LOG*******
+                   #ifdef LOG
+                   qDebug()<<"Failed to commit :: program.cpp";
+                   #endif
+                   //**********************
+
+                   baza.rollback();
+               }
+
+               //******DEBUG_LOG*******
+               #ifdef LOG
+               qDebug() << "Inserted using Qt Transaction :: program.cpp";
+               #endif
+               //**********************
 
             }
             else
             {
                 msgRetry("ERROR", "USUWANIE UZYTKOWNIKA NIE POWIODLO SIE");
             }
-
-            if( !query.exec() )
-            {
-                //******DEBUG_LOG*******
-                #ifdef LOG
-                qDebug() << "Failed to add tag :: program.cpp";
-                #endif
-                //**********************
-
-               msgRetry("ERROR", "USUWNAIE UZYTKOWNIKA SIE NIE POWIODLO");
-            }
-
-           if(!baza.commit())
-           {
-               //******DEBUG_LOG*******
-               #ifdef LOG
-               qDebug()<<"Failed to commit :: program.cpp";
-               #endif
-               //**********************
-
-               baza.rollback();
-           }
-
-           //******DEBUG_LOG*******
-           #ifdef LOG
-           qDebug() << "Inserted using Qt Transaction :: program.cpp";
-           #endif
-           //**********************
-
         }
         else
         {
@@ -764,7 +765,6 @@ void Program::on_btnPusun_clicked()
             #endif
             //**********************
         }
-    }
 
     showRecords();
 }
@@ -873,24 +873,24 @@ void Program::on_cbP_stateChanged(int arg1)
 //USTAWIANIE GODZIN PRACY -> PRZYCIKI GODZIN
 void Program::on_btn7_15_clicked()
 {
-    czasPracy("07:00:00", "15:00:00");
+    czasPracy("07:00", "15:00");
 }
 
 void Program::on_btn8_16_clicked()
 {
-    czasPracy("08:00:00", "16:00:00");
+    czasPracy("08:00", "16:00");
 }
 
 
 void Program::on_btn9_17_clicked()
 {
-    czasPracy("09:00:00", "17:00:00");
+    czasPracy("09:00", "17:00");
 }
 
 
 void Program::on_btn10_18_clicked()
 {
-    czasPracy("10:00:00", "18:00:00");
+    czasPracy("10:00", "18:00");
 }
 
 void Program::czasPracy(QString poczatek, QString koniec)
@@ -1085,11 +1085,22 @@ void Program::on_btnUUsun_clicked()
         {
             query.prepare("DELETE FROM `Gabinet`.`uslugi` WHERE uslugi_id = '" +  QString::number(id_rekordu) + "';");
 
-            query.exec();
+            if( !query.exec() )
+            {
+                //******DEBUG_LOG*******
+                #ifdef LOG
+                qDebug() << "Failed to add tag :: program.cpp";
+                #endif
+                //**********************
 
-            clearRecord();
+                msgRetry("ERROR", "BLAD USUWANIA USLUGI");
+            }
+            else
+            {
+                clearRecord();
 
-            msgOK("WARNING", "USUNIETO USLUGE");
+                msgOK("WARNING", "USUNIETO USLUGE");
+            }
 
         }
         else
@@ -1097,17 +1108,6 @@ void Program::on_btnUUsun_clicked()
 
             msgRetry("ERROR", "BLAD USUWANIA USLUGI");
 
-        }
-
-        if( !query.exec() )
-        {
-            //******DEBUG_LOG*******
-            #ifdef LOG
-            qDebug() << "Failed to add tag :: program.cpp";
-            #endif
-            //**********************
-
-            msgRetry("ERROR", "BLAD USUWANIA USLUGI");
         }
 
        if(!baza.commit())
@@ -1408,15 +1408,15 @@ void Program::PokazUslugiPracownika()
 
     queryModel = new QSqlQueryModel(this);
 
-    queryModel->setQuery("SELECT uslugi.uslugi_id, uslugi.nazwa, uslugi.cena, uslugi.czas FROM uslugi, uzytkownik_usluga WHERE "
-                                         "uslugi.uslugi_id = uzytkownik_usluga.uslugi_id AND uzytkownik_usluga.uzytkownik_id = "+ QString::number(id_rekordu) +"ORDER BY nazwa;");
+    queryModel->setQuery("SELECT uslugi.uslugi_id, uslugi.nazwa, uslugi.cena, uslugi.czas FROM uslugi, uzytkownik_usluga WHERE uslugi.uslugi_id = "
+                         "uzytkownik_usluga.uslugi_id AND uzytkownik_usluga.uzytkownik_id = '"+ QString::number(id_rekordu) +"' ORDER BY nazwa;");
     try {
 
         this->ui->dgPUUslugi->setModel(queryModel);
 
         this->ui->dgPUUslugi->setSelectionBehavior(QAbstractItemView::SelectRows); //zaznaczanie calego wiersza
 
-        //this->ui->dgPUUslugi->hideColumn(0); //chowanie kolumny z id
+        this->ui->dgPUUslugi->hideColumn(0); //chowanie kolumny z id
 
     } catch (const std::exception &e)
     {
@@ -1432,9 +1432,11 @@ void Program::PokazUslugiPracownika()
     }
 }
 
-//klikniecie uslugi w wyborze uslug
+//klikniecie uslugi w wyborze uslug -> dodanie jej do pracownika
 void Program::on_dgPUDodajUsluge_clicked(const QModelIndex &index)
 {
+    bool czyIstnieje = false;
+
     id_uslugiDoDodania = this->ui->dgPUDodajUsluge->selectionModel()->selectedIndexes().at(0).data(Qt::DisplayRole).toInt();
     //******DEBUG_LOG*******
     #ifdef LOG
@@ -1443,6 +1445,233 @@ void Program::on_dgPUDodajUsluge_clicked(const QModelIndex &index)
     #endif
     //**********************
 
+    //******DEBUG_LOG*******
+    #ifdef LOG
+    if(!baza.open())
+    {
+        qDebug() << "nie otwarta baza :: program.cpp";
+    }
+    #endif
+    //**********************
+
+    QSqlDatabase baza = QSqlDatabase::database();
+
+    QSqlQuery zapytanie;
+
+    zapytanie.exec("SELECT uzytkownik_usluga.uslugi_id FROM uzytkownik_usluga WHERE uzytkownik_usluga.uzytkownik_id = '"+ QString::number(id_rekordu) +"';");
+
+    //zapytanie.exec("SELECT uzytkownik_nazwa, haslo FROM uzytkownik");
+
+    while(zapytanie.next())
+    {
+        if(QString::number(id_uslugiDoDodania) == zapytanie.value(0).toString())
+        {
+            czyIstnieje = true;
+
+            //******DEBUG_LOG*******
+            #ifdef LOG
+            qDebug() << "takie same id :: program.cpp";
+            #endif
+            //**********************
+        }
+
+    }
+
+    if(czyIstnieje == false)
+    {
+        QMessageBox msgBox;
+
+        QMessageBox::StandardButton reply;
+
+        reply = msgBox.question(this, "WARRNING", "CZY NA PEWNO CHCESZ DODAC WYBRANA USLUGE DO PRACOWNIKA", QMessageBox::Yes | QMessageBox::No);
+
+        if(reply == QMessageBox::Yes)
+        {
+            DodajUsluge();
+        }
+        else
+        {
+            msgOK("ERROR", "NIE DODANO USLUGI");
+        }
+    }
+    else
+    {
+        msgOK("ERROR", "TAKA USLUGA JUZ ISTNIEJE DLA WYBRANEGO PRACOWNIKA");
+    }
+
+    PokazUslugiPracownika();
+
+}
+
+void Program::DodajUsluge()
+{
+    QSqlDatabase baza = QSqlDatabase::database();
+
+    //******DEBUG_LOG*******
+    #ifdef LOG
+    if(!baza.open())
+    {
+        qDebug() << "nie otwarta baza :: program.cpp";
+    }
+    #endif
+    //**********************
+
+    QSqlQuery query(baza);
+
+    if(baza.transaction())
+    {
+
+        query.prepare("INSERT INTO `Gabinet`.`uzytkownik_usluga` (`uzytkownik_id`, `uslugi_id`) "
+                               "VALUES (:uzytkownik_id, :uslugi_id);");
+
+        query.bindValue( ":uzytkownik_id", id_rekordu);
+
+        query.bindValue( ":uslugi_id", id_uslugiDoDodania);
+
+        if( !query.exec() )
+        {
+
+            //******DEBUG_LOG*******
+            #ifdef LOG
+            qDebug() << "Failed to add tag :: program.cpp";
+            #endif
+            //**********************
+
+            msgRetry("ERROR", "NIE UDALO SIE DODAC USLUGI");
+        }
+        else
+        {
+            msgOK("WARNING", "DODANO USLUGE");
+
+        }
+
+        if(!baza.commit())
+        {
+            //******DEBUG_LOG*******
+            #ifdef LOG
+            qDebug()<<"Failed to commit :: program.cpp";
+            #endif
+            //**********************
+
+            baza.rollback();
+        }
+
+        //******DEBUG_LOG*******
+        #ifdef LOG
+        qDebug() << "Inserted using Qt Transaction :: program.cpp";
+        #endif
+        //**********************
+    }
+    else
+    {
+        //******DEBUG_LOG*******
+        #ifdef LOG
+        qDebug() << "Failed to start transaction mode :: program.cpp";
+        #endif
+        //**********************
+    }
+}
+
+//usuniecie uslugi
+void Program::on_dgPUUslugi_clicked(const QModelIndex &index)
+{
+    id_uslugiDoUsuniecia = this->ui->dgPUUslugi->selectionModel()->selectedIndexes().at(0).data(Qt::DisplayRole).toInt();
+    //******DEBUG_LOG*******
+    #ifdef LOG
+    //qDebug() << "nacisnieta komorka: " << currentCell << " :: program.cpp";
+    qDebug() << "komorka o numerze id_uslugi: " <<  id_uslugiDoDodania << " :: program.cpp";
+    #endif
+    //**********************
+
+    //******DEBUG_LOG*******
+    #ifdef LOG
+    if(!baza.open())
+    {
+        qDebug() << "nie otwarta baza :: program.cpp";
+    }
+    #endif
+    //**********************
+
+
+    QMessageBox msgBox;
+
+    QMessageBox::StandardButton reply;
+
+    reply = msgBox.question(this, "WARRNING", "CZY NA PEWNO CHCESZ USUNAC WYBRANA USLUGE DO PRACOWNIKA", QMessageBox::Yes | QMessageBox::No);
+
+    if(reply == QMessageBox::Yes)
+    {
+        usunUsluge();
+    }
+    else
+    {
+        msgOK("ERROR", "NIE USUNIETO USLUGI");
+    }
+
+    PokazUslugiPracownika();
+}
+
+void Program::usunUsluge()
+{
+    QSqlDatabase baza = QSqlDatabase::database();
+
+    //******DEBUG_LOG*******
+    #ifdef LOG
+    if(!baza.open())
+    {
+        qDebug() << "nie otwarta baza :: program.cpp";
+    }
+    #endif
+    //**********************
+
+    QSqlQuery query(baza);
+
+    if(baza.transaction())
+    {
+        query.prepare("DELETE FROM `Gabinet`.`uzytkownik_usluga` WHERE uslugi_id = '" +  QString::number(id_uslugiDoUsuniecia) + "';");
+
+        if( !query.exec() )
+        {
+
+            //******DEBUG_LOG*******
+            #ifdef LOG
+            qDebug() << "Failed to add tag :: program.cpp";
+            #endif
+            //**********************
+
+            msgRetry("ERROR", "NIE UDALO SIE DODAC USLUGI");
+        }
+        else
+        {
+            msgOK("WARNING", "USUNIETO USLUGE");
+
+        }
+
+        if(!baza.commit())
+        {
+            //******DEBUG_LOG*******
+            #ifdef LOG
+            qDebug()<<"Failed to commit :: program.cpp";
+            #endif
+            //**********************
+
+            baza.rollback();
+        }
+
+        //******DEBUG_LOG*******
+        #ifdef LOG
+        qDebug() << "Inserted using Qt Transaction :: program.cpp";
+        #endif
+        //**********************
+    }
+    else
+    {
+        //******DEBUG_LOG*******
+        #ifdef LOG
+        qDebug() << "Failed to start transaction mode :: program.cpp";
+        #endif
+        //**********************
+    }
 }
 
 
@@ -1494,3 +1723,4 @@ void Program::msgRetry(QString title, QString msg)
 
 //wzcytywanie informacji z bazy danych -> jedna funkcja ze zmienna ktora tabela i selekt
 //w uslugach dziala opcja modyfikuj i usun gdy wszystkie rekordy usuniete sa -> uodpornic sie
+
