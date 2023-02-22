@@ -2,18 +2,25 @@
 #include "ui_program.h"
 
 //odznaczyc jezeli chcemy logi
-//#define LOG
+#define LOG
 
-Program::Program(QWidget *parent) :
-    QDialog(parent),
-    ui(new Ui::Program)
-{
-    ui->setupUi(this);
-}
+//zmienne globalne
 
 QString nazwaUzytkownika;
 
 int id_rekordu;
+
+int id_uslugiDoDodania;
+
+//---------------------------------------GLOWNE OKNO----------------------------------------------------
+
+Program::Program(QWidget *parent) :
+    QDialog(parent),
+
+    ui(new Ui::Program)
+{
+    ui->setupUi(this);
+}
 
 Program::Program(QString nazwaUzytkownikaLog) :
     ui(new Ui::Program)
@@ -36,33 +43,25 @@ Program::Program(QString nazwaUzytkownikaLog) :
 
     baza.open();
 
+    //******DEBUG_LOG*******
+    #ifdef LOG
     if(!baza.open())
     {
-        qDebug() << "nie otwarta baza main";
+        qDebug() << "nie otwarta baza :: main  :: program.cpp";
     }
+    #endif
+    //**********************
 
-    //tworzeni instancji uzytkownika
-
-    Uzytkownik uzytkownik;
-
-    //sciaganie z bazy informacji o przekazanym rekordzie
     //przekazana nazwa uzytkownika
 
     nazwaUzytkownika = nazwaUzytkownikaLog;
 
     //******DEBUG_LOG*******
     #ifdef LOG
-    qDebug()<<"nazwa uzytkownika przekazana: "<< nazwaUzytkownika;
+    qDebug()<<"nazwa uzytkownika przekazana: "<< nazwaUzytkownika << " :: program.cpp";
     #endif
     //**********************
 
-    PobieranieDanych(nazwaUzytkownika, &uzytkownik);
-
-    //******DEBUG_LOG*******
-    #ifdef LOG
-    qDebug()<< "id: " << uzytkownik.id << "imie: " << uzytkownik.imie << "nazwisko: " << uzytkownik.nazwisko << "haslo: " << uzytkownik.haslo <<"pracownik?: " << uzytkownik.jestPracownikiem;
-    #endif
-    //**********************
 
 }
 
@@ -70,14 +69,13 @@ Program::~Program()
 {
     QSqlDatabase baza = QSqlDatabase::database();
 
-    if(!baza.open())
+    if(baza.open())
     {
-        qDebug() << "nie otwarta";
-    }
-    else
-    {
+
         baza.close();
     }
+
+    QSqlDatabase::removeDatabase(baza.connectionName());
 
     delete ui;
 }
@@ -85,51 +83,15 @@ Program::~Program()
 //--------------------------------------------------UZYTKOWNICY---------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------------
 
-//Pobranie informacji o zalogowanym uzytkowniku
-void Program::PobieranieDanych(QString nazwaUzytkownikaLog, struct Uzytkownik *uzytkownik)
-{
-    QSqlDatabase baza = QSqlDatabase::database();
-
-    if(!baza.open())
-    {
-        qDebug() << "nie otwarta";
-    }
-
-    QSqlQueryModel zapytanie;
-
-    zapytanie.setQuery("SELECT uzytkownik_id, imie, nazwisko, haslo, pracownik FROM uzytkownik WHERE uzytkownik_nazwa = '" + nazwaUzytkownikaLog + "';");
-
-    uzytkownik->id = zapytanie.record(0).value("uzytkownik_id").toInt();
-
-    uzytkownik->imie = zapytanie.record(0).value("imie").toString();
-
-    uzytkownik->nazwisko = zapytanie.record(0).value("nazwisko").toString();
-
-    uzytkownik->haslo = zapytanie.record(0).value("haslo").toString();
-
-    int pracownik = zapytanie.record(0).value("pracownik").toInt();
-
-    if(pracownik == 0)
-    {
-        uzytkownik->jestPracownikiem = false;
-    }
-    else
-    {
-        uzytkownik->jestPracownikiem = true;
-    }
-
-}
-//~Pobranie informacji o zalogowanym uzytkowniku
-
-
-//Sprawdzenie wypelnienia pol formularza haslo
+//Sprawdzenie wypelnienia pol formularza haslo -> gdy podane 3 wartości i hasło powtorzone takie samo to zezwalamy na wcisniecie przycisku
 void Program::btnZmien_pokaz()
 {
+
     if(this->ui->txtHStare->text() != "" && this->ui->txtHNowe->text() != "" && this->ui->txtHPowtorzone->text() == this->ui->txtHNowe->text())
     {
         //******DEBUG_LOG*******
         #ifdef LOG
-        qDebug()<< "zezwalamy na wcisniecie przycisku zmien haslo";
+        qDebug()<< "zezwalamy na wcisniecie przycisku zmien haslo :: program.cpp";
         #endif
         //**********************
 
@@ -139,7 +101,7 @@ void Program::btnZmien_pokaz()
     {
         //******DEBUG_LOG*******
         #ifdef LOG
-        qDebug()<< "nie zezwalamy na wcisniecie przycisku zmien haslo";
+        qDebug()<< "nie zezwalamy na wcisniecie przycisku zmien haslo :: program.cpp";
         #endif
         //**********************
 
@@ -172,10 +134,14 @@ void Program::on_btnHZmien_clicked()
 
     QSqlDatabase baza = QSqlDatabase::database();
 
+    //******DEBUG_LOG*******
+    #ifdef LOG
     if(!baza.open())
     {
-        qDebug() << "nie otwarta";
+        qDebug() << "nie otwarta baza :: program.cpp";
     }
+    #endif
+    //**********************
 
     QSqlQueryModel zapytanie;
 
@@ -185,44 +151,32 @@ void Program::on_btnHZmien_clicked()
 
     try {
 
-        QMessageBox msgBox;
-
-        msgBox.setWindowTitle("WARNING");
-
         if(this->ui->txtHStare->text() == haslo)
         {
-            zapytanie.setQuery("UPDATE uzytkownik SET haslo = '"+ this->ui->txtHNowe->text() +"' WHERE uzytkownik_nazwa = '" + nazwaUzytkownika + "' AND haslo = '"+ haslo +"'");
+            zapytanie.setQuery("UPDATE uzytkownik SET haslo = '"+ this->ui->txtHNowe->text() +"' "
+                               "WHERE uzytkownik_nazwa = '" + nazwaUzytkownika + "' AND haslo = '"+ haslo +"'");
 
             //******DEBUG_LOG*******
             #ifdef LOG
-            qDebug()<< "zmieniono haslo";
+            qDebug()<< "zmieniono haslo :: program.cpp";
             #endif
             //**********************
 
-            msgBox.setInformativeText("ZMIENIONO HASLO");
-
-            msgBox.setStandardButtons(QMessageBox::Ok);
-
-            msgBox.setDefaultButton(QMessageBox::Ok);
+            msgOK("WARNING", "ZMIENIONO HASŁO");
 
         }
         else
         {
             //******DEBUG_LOG*******
             #ifdef LOG
-            qDebug()<< "haslo nie zmieniono";
+            qDebug()<< "haslo nie zmieniono :: program.cpp";
             #endif
             //**********************
 
-            msgBox.setInformativeText("Bledna wprowadzenie starego hasla badz powtorzenia");
-
-            msgBox.setStandardButtons(QMessageBox::Retry);
-
-            msgBox.setDefaultButton(QMessageBox::Retry);
+            msgRetry("WARNING", "BLEDNE WPROWADZENIE STAREGO HASLA ALBO NIEPOPRAWNE POWTORZENIE");
 
         }
 
-        int ret = msgBox.exec();
 
     } catch (const std::exception &e)
     {
@@ -233,22 +187,12 @@ void Program::on_btnHZmien_clicked()
         #endif
         //**********************
 
-        QMessageBox msgBox;
-
-        msgBox.setWindowTitle("ERROR");
-
-        msgBox.setInformativeText("Blad polaczenia z baza danych");
-
-        msgBox.setStandardButtons(QMessageBox::Retry | QMessageBox::Close);
-
-        msgBox.setDefaultButton(QMessageBox::Retry);
-
-        int ret = msgBox.exec();
+        MsgBladLaczeniaBazy();
     }
 
 }
 
-//Pobieranie rekordów z SQL do tablicy wynikow
+//Pobieranie rekordów z SQL do tablicy wynikow -> uzytkownicy
 void Program::on_btnPSzukaj_clicked()
 {
     UzytkownicySzukaj();
@@ -258,14 +202,20 @@ void Program::UzytkownicySzukaj()
 {
     QSqlDatabase baza = QSqlDatabase::database();
 
+    //******DEBUG_LOG*******
+    #ifdef LOG
     if(!baza.open())
     {
-        qDebug() << "nie otwarta";
+        qDebug() << "nie otwarta :: program.cpp";
     }
+    #endif
+    //**********************
 
     queryModel = new QSqlQueryModel(this);
 
-    queryModel->setQuery("SELECT uzytkownik_id, imie, nazwisko, uzytkownik_nazwa AS login, pracownik FROM uzytkownik WHERE CONCAT(imie, ' ', nazwisko, uzytkownik_nazwa) LIKE '%"+ this->ui->txtPSzukaj->text() +"%' ORDER BY nazwisko;");
+    queryModel->setQuery("SELECT uzytkownik_id, imie, nazwisko, uzytkownik_nazwa AS login, pracownik "
+                         "FROM uzytkownik WHERE CONCAT(imie, ' ', nazwisko, uzytkownik_nazwa) "
+                         "LIKE '%"+ this->ui->txtPSzukaj->text() +"%' ORDER BY nazwisko;");
 
     try {
 
@@ -285,17 +235,7 @@ void Program::UzytkownicySzukaj()
         #endif
         //**********************
 
-        QMessageBox msgBox;
-
-        msgBox.setWindowTitle("ERROR");
-
-        msgBox.setInformativeText("Blad polaczenia z baza danych");
-
-        msgBox.setStandardButtons(QMessageBox::Retry | QMessageBox::Close);
-
-        msgBox.setDefaultButton(QMessageBox::Retry);
-
-        int ret = msgBox.exec();
+        MsgBladLaczeniaBazy();
     }
 
 }
@@ -313,8 +253,8 @@ void Program::on_dgUzytkownicy_clicked(const QModelIndex &index)
 
     //******DEBUG_LOG*******
     #ifdef LOG
-    //qDebug() << "nacisnieta komorka: " << currentCell;
-    qDebug() << "komorka o numerze id: " <<  id_rekordu;
+    //qDebug() << "nacisnieta komorka: " << currentCell << " :: program.cpp";
+    qDebug() << "komorka o numerze id: " <<  id_rekordu << " :: program.cpp";
     #endif
     //**********************
 
@@ -336,7 +276,7 @@ void Program::on_dgUzytkownicy_clicked(const QModelIndex &index)
     {
         //******DEBUG_LOG*******
         #ifdef LOG
-        qDebug() << "Jest  pracownikiem";
+        qDebug() << "Jest  pracownikiem :: program.cpp";
         #endif
         //**********************
 
@@ -344,24 +284,38 @@ void Program::on_dgUzytkownicy_clicked(const QModelIndex &index)
 
         QSqlDatabase baza = QSqlDatabase::database();
 
+        //******DEBUG_LOG*******
+        #ifdef LOG
         if(!baza.open())
         {
-            qDebug() << "nie otwarta";
+            qDebug() << "nie otwarta baza :: program.cpp";
         }
+        #endif
+        //**********************
 
         QSqlQueryModel zapytanie;
 
-        zapytanie.setQuery("SELECT pon_od, pon_do, wt_od, wt_do, sr_od, sr_do, cz_od, cz_do, pt_od, pt_do FROM godziny WHERE uzytkownik_id = '" + QString::number(id_rekordu) + "';"); //SELECT * to oznacza ze wszystko
+        zapytanie.setQuery("SELECT pon_od, pon_do, wt_od, wt_do, sr_od, sr_do, cz_od, cz_do, pt_od, pt_do FROM godziny "
+                           "WHERE uzytkownik_id = '" + QString::number(id_rekordu) + "';"); //SELECT * to oznacza ze wszystko
 
         this->ui->txtponOd->setText(zapytanie.record(0).value("pon_od").toString());
+
         this->ui->txtponDo->setText(zapytanie.record(0).value("pon_do").toString());
+
         this->ui->txtwtOd->setText(zapytanie.record(0).value("wt_od").toString());
+
         this->ui->txtwtDo->setText(zapytanie.record(0).value("wt_do").toString());
+
         this->ui->txtsrOd->setText(zapytanie.record(0).value("sr_od").toString());
+
         this->ui->txtsrDo->setText(zapytanie.record(0).value("sr_do").toString());
+
         this->ui->txtczwOd->setText(zapytanie.record(0).value("cz_od").toString());
+
         this->ui->txtczwDo->setText(zapytanie.record(0).value("cz_do").toString());
+
         this->ui->txtptOd->setText(zapytanie.record(0).value("pt_od").toString());
+
         this->ui->txtptDo->setText(zapytanie.record(0).value("pt_do").toString());
 
     }
@@ -369,30 +323,37 @@ void Program::on_dgUzytkownicy_clicked(const QModelIndex &index)
     {
         //******DEBUG_LOG*******
         #ifdef LOG
-        qDebug() << "Nie jest pracownikiem";
+        qDebug() << "Nie jest pracownikiem :: program.cpp";
         #endif
         //**********************
 
         this->ui->cbP->setChecked(false);
+
         this->ui->txtponOd->clear();
+
         this->ui->txtponDo->clear();
+
         this->ui->txtwtOd->clear();
+
         this->ui->txtwtDo->clear();
+
         this->ui->txtsrOd->clear();
+
         this->ui->txtsrDo->clear();
+
         this->ui->txtczwOd->clear();
+
         this->ui->txtczwDo->clear();
+
         this->ui->txtptOd->clear();
+
         this->ui->txtptDo->clear();
 
     }
 
-    showRecords();
-
-
 }
 
-//dodanie uzytkownikow do bazy na razie jest domyslne haslo 123 (zmienic dodać okienko?)
+//dodanie uzytkownikow do bazy
 void Program::on_btnPdodaj_clicked()
 {
     QString imie = this->ui->txtPImie->text();
@@ -405,7 +366,7 @@ void Program::on_btnPdodaj_clicked()
 
     //******DEBUG_LOG*******
     #ifdef LOG
-    qDebug() << "Wpisane dane -> imie: " << imie << "nazwisko: " << nazwisko << "nazwa: " << login << "czy jest pracownikiem?: " << pracownik  ;
+    qDebug() << "Wpisane dane -> imie: " << imie << "nazwisko: " << nazwisko << "nazwa: " << login << "czy jest pracownikiem?: " << pracownik  << " :: program.cpp";
     #endif
     //**********************
 
@@ -413,10 +374,14 @@ void Program::on_btnPdodaj_clicked()
 
         QSqlDatabase baza = QSqlDatabase::database();
 
+        //******DEBUG_LOG*******
+        #ifdef LOG
         if(!baza.open())
         {
-            qDebug() << "nie otwarta";
+            qDebug() << "nie otwarta baza :: program.cpp";
         }
+        #endif
+        //**********************
 
         if(baza.transaction())
         {
@@ -424,73 +389,71 @@ void Program::on_btnPdodaj_clicked()
 
             query.prepare("INSERT INTO `Gabinet`.`uzytkownik` (`uzytkownik_nazwa`, `imie`, `nazwisko`, `pracownik`, `haslo`) "
                           "VALUES (:uzytkownik_nazwa, :imie, :nazwisko, :pracownik, :haslo);");
+
             query.bindValue( ":uzytkownik_nazwa", login);
+
             query.bindValue( ":imie", imie );
+
             query.bindValue( ":nazwisko", nazwisko );
+
             query.bindValue( ":pracownik", pracownik );
+
             query.bindValue( ":haslo", login ); //domyslne haslo zawsze jak login
 
             if( !query.exec() )
             {
                 //******DEBUG_LOG*******
                 #ifdef LOG
-                qDebug() << "Failed to add tag";
+                qDebug() << "Failed to add tag :: program.cpp";
                 #endif
                 //**********************
 
-                //qFatal( "Failed to add tag" );
+                msgRetry("ERROR", "NIE DODANO UZYTKOWNIKA");
+
             }
             else
             {
-                QMessageBox msgBox;
-
-                msgBox.setWindowTitle("WARNING");
-
-                msgBox.setInformativeText("dodano uzytkownika");
-
-                msgBox.setStandardButtons(QMessageBox::Ok);
-
-                //msgBox.setDefaultButton(QMessageBox::Retry);
-                int ret = msgBox.exec();
+                msgOK("WARNING","DODANO UZYTKOWNIKA");
             }
 
             if(pracownik == true){
 
                 query.prepare("INSERT INTO `Gabinet`.`godziny` (`uzytkownik_id`, `pon_od`, `pon_do`, `wt_od`, `wt_do`, `sr_od`, `sr_do`, `cz_od`, `cz_do`, `pt_od`, `pt_do`) "
                               "VALUES (last_insert_id(), :pon_od, :pon_do, :wt_od, :wt_do, :sr_od, :sr_do, :cz_od, :cz_do, :pt_od, :pt_do);");
+
                 query.bindValue( ":pon_od",  this->ui->txtponOd->text() );
+
                 query.bindValue( ":pon_do", this->ui->txtponDo->text() );
+
                 query.bindValue( ":wt_od", this->ui->txtwtOd->text() );
+
                 query.bindValue( ":wt_do", this->ui->txtwtDo->text() );
+
                 query.bindValue( ":sr_od", this->ui->txtsrOd->text() );
+
                 query.bindValue( ":sr_do", this->ui->txtsrDo->text() );
+
                 query.bindValue( ":cz_od", this->ui->txtczwOd->text() );
+
                 query.bindValue( ":cz_do", this->ui->txtczwDo->text() );
+
                 query.bindValue( ":pt_od", this->ui->txtptOd->text() );
+
                 query.bindValue( ":pt_do", this->ui->txtptDo->text() );
 
                 if( !query.exec() )
                 {
                     //******DEBUG_LOG*******
                     #ifdef LOG
-                    qDebug() << "Failed to add tag";
+                    qDebug() << "Failed to add tag :: program.cpp";
                     #endif
                     //**********************
 
-                    //qFatal( "Failed to add tag" );
+                    msgRetry("ERROR", "NIE DODANO SEKCJI GODZINY DO UZYTKOWNIKA");
                 }
                 else
                 {
-                    QMessageBox msgBox;
-
-                    msgBox.setWindowTitle("WARNING");
-
-                    msgBox.setInformativeText("dodano sekcje godizny");
-
-                    msgBox.setStandardButtons(QMessageBox::Ok);
-
-                    //msgBox.setDefaultButton(QMessageBox::Retry);
-                    int ret = msgBox.exec();
+                    msgOK("WARNING","DODANO SEKCJE GODZINY DO UZYTKOWNIKA");
                 }
             }
 
@@ -498,7 +461,7 @@ void Program::on_btnPdodaj_clicked()
            {
                //******DEBUG_LOG*******
                #ifdef LOG
-               qDebug()<<"Failed to commit";
+               qDebug()<<"Failed to commit :: program.cpp";
                #endif
                //**********************
 
@@ -507,7 +470,7 @@ void Program::on_btnPdodaj_clicked()
 
            //******DEBUG_LOG*******
            #ifdef LOG
-           qDebug() << "Inserted using Qt Transaction";
+           qDebug() << "Inserted using Qt Transaction :: program.cpp";
            #endif
            //**********************
 
@@ -516,7 +479,7 @@ void Program::on_btnPdodaj_clicked()
         {
             //******DEBUG_LOG*******
             #ifdef LOG
-            qDebug() << "Failed to start transaction mode";
+            qDebug() << "Failed to start transaction mode :: program.cpp";
             #endif
             //**********************
         }
@@ -526,12 +489,10 @@ void Program::on_btnPdodaj_clicked()
     showRecords();
 
 }
-
-//DODAC USUWANIE I MODYFIKOWANIE REKORDOW:
+//~DODANIE UZYTKOWNIKA OKIENKO UZYTKOWNICY
 
 
 //modyfikowacja danych uzytkownika
-
 void Program::on_btnPmodyfikuj_clicked()
 {
     QString imie = this->ui->txtPImie->text();
@@ -544,17 +505,21 @@ void Program::on_btnPmodyfikuj_clicked()
 
     //******DEBUG_LOG*******
     #ifdef LOG
-    qDebug() << "Wpisane dane -> imie: " << imie << "nazwisko: " << nazwisko << "nazwa: " << login << "czy jest pracownikiem?: " << pracownik  ;
+    qDebug() << "Wpisane dane -> imie: " << imie << "nazwisko: " << nazwisko << "nazwa: " << login << "czy jest pracownikiem?: " << pracownik << " :: program.cpp";
     #endif
     //**********************
 
     {
         QSqlDatabase baza = QSqlDatabase::database();
 
+        //******DEBUG_LOG*******
+        #ifdef LOG
         if(!baza.open())
         {
-            qDebug() << "nie otwarta";
+            qDebug() << "nie otwarta baza :: program.cpp";
         }
+        #endif
+        //**********************
 
 
         if(baza.transaction())
@@ -571,44 +536,49 @@ void Program::on_btnPmodyfikuj_clicked()
 
                 //******DEBUG_LOG*******
                 #ifdef LOG
-                qDebug() << "Failed to add tag";
+                qDebug() << "Failed to add tag :: program.cpp";
                 #endif
                 //**********************
 
-                //qFatal( "Failed to add tag" );
+                msgRetry("ERROR", "NIE ZMODYFIKOWANO DANYCH UZYTKOWNIKA");
             }
             else
             {
-                QMessageBox msgBox;
-
-                msgBox.setWindowTitle("WARNING");
-
-                msgBox.setInformativeText("zmodyfikowane dane uytkownika");
-
-                msgBox.setStandardButtons(QMessageBox::Ok);
-
-                //msgBox.setDefaultButton(QMessageBox::Retry);
-                int ret = msgBox.exec();
+                msgOK("WARNING", "ZMODYFIKOWANO DANE UZYTKOWNIKA");
             }
 
             QSqlQuery zapytanie;
 
-            zapytanie.prepare("SELECT * FROM godziny WHERE uzytkownik_id = '" + QString::number(id_rekordu) + "';"); //SELECT * to oznacza ze wszystko
+            zapytanie.prepare("SELECT * FROM godziny WHERE uzytkownik_id = '" + QString::number(id_rekordu) + "';");
+
             zapytanie.exec();
 
-            if((zapytanie.size() != 0) && (pracownik== true) )
+            if((zapytanie.size() != 0) && (pracownik== true) ) //SPRAWDZANIE CZY JEST TABELA GODZINY DLA DANEGO ID
             {
-                qDebug() << "jest rekord";
+                //******DEBUG_LOG*******
+                #ifdef LOG
+                    qDebug() << "istnieja godziny pracy dla tego rekordu :: program.cpp";
+                #endif
+                //**********************
 
                 QString ponP =  this->ui->txtponOd->text();
+
                 QString ponK = this->ui->txtponDo->text();
+
                 QString wtP = this->ui->txtwtOd->text();
+
                 QString wtK = this->ui->txtwtDo->text();
+
                 QString srP = this->ui->txtsrOd->text();
+
                 QString srK = this->ui->txtsrDo->text();
+
                 QString czP = this->ui->txtczwOd->text();
+
                 QString czK = this->ui->txtczwDo->text();
+
                 QString ptP = this->ui->txtptOd->text();
+
                 QString ptK = this->ui->txtptDo->text();
 
                 query.prepare("UPDATE `Gabinet`.`godziny` SET `pon_od` = '"+ ponP +"', `pon_do` = '"+ ponK +"', `wt_od` = '"+ wtP +"', `wt_do` = '"+ wtK +"', `sr_od` = '"+ srP +"', `sr_do` = '"+ srK +"'"
@@ -622,70 +592,65 @@ void Program::on_btnPmodyfikuj_clicked()
                     #endif
                     //**********************
 
-                    //qFatal( "Failed to add tag" );
+                    msgRetry("ERROR", "NIE UDALO SIE ZMODYFIKOWAC GODZIN PRACY UZYTKOWNIKA");
                 }
                 else
                 {
-                    QMessageBox msgBox;
-
-                    msgBox.setWindowTitle("WARNING");
-
-                    msgBox.setInformativeText("zmodyfikowane dane uytkownika w sekcji godziny");
-
-                    msgBox.setStandardButtons(QMessageBox::Ok);
-
-                    //msgBox.setDefaultButton(QMessageBox::Retry);
-                    int ret = msgBox.exec();
+                    msgOK("WARNING", "ZMODYFIKOWANO GODIZNY PRACY UZYTKOWNIKA");
                 }
             }
             else if(pracownik== true)
             {
                 query.prepare("INSERT INTO `Gabinet`.`godziny` (`uzytkownik_id`, `pon_od`, `pon_do`, `wt_od`, `wt_do`, `sr_od`, `sr_do`, `cz_od`, `cz_do`, `pt_od`, `pt_do`) "
                               "VALUES ("+ QString::number(id_rekordu)  +", :pon_od, :pon_do, :wt_od, :wt_do, :sr_od, :sr_do, :cz_od, :cz_do, :pt_od, :pt_do);");
+
                 query.bindValue( ":pon_od",  this->ui->txtponOd->text() );
+
                 query.bindValue( ":pon_do", this->ui->txtponDo->text() );
+
                 query.bindValue( ":wt_od", this->ui->txtwtOd->text() );
+
                 query.bindValue( ":wt_do", this->ui->txtwtDo->text() );
+
                 query.bindValue( ":sr_od", this->ui->txtsrOd->text() );
+
                 query.bindValue( ":sr_do", this->ui->txtsrDo->text() );
+
                 query.bindValue( ":cz_od", this->ui->txtczwOd->text() );
+
                 query.bindValue( ":cz_do", this->ui->txtczwDo->text() );
+
                 query.bindValue( ":pt_od", this->ui->txtptOd->text() );
+
                 query.bindValue( ":pt_do", this->ui->txtptDo->text() );
 
                 if( !query.exec() )
                 {
                     //******DEBUG_LOG*******
                     #ifdef LOG
-                    qDebug() << "Failed to add tag";
+                    qDebug() << "Failed to add tag :: program.cpp";
                     #endif
                     //**********************
 
-                    //qFatal( "Failed to add tag" );
+                    msgRetry("ERROR", "NIE UDALO SIE DODAC GODZIN PRACY DO UZYTKOWNIKA");
                 }
                 else
                 {
-                    QMessageBox msgBox;
-
-                    msgBox.setWindowTitle("WARNING");
-
-                    msgBox.setInformativeText("dodano sekcje godizny do uzytkownika");
-
-                    msgBox.setStandardButtons(QMessageBox::Ok);
-
-                    //msgBox.setDefaultButton(QMessageBox::Retry);
-                    int ret = msgBox.exec();
+                    msgOK("WARNING", "DODAO GODIZNY PRACY DO UZYTKOWNIKA");
                 }
-                qDebug() << " nie ma rekordu";
+
+                //******DEBUG_LOG*******
+                #ifdef LOG
+                qDebug() << "nie istnieja godziny pracy dla tego rekordu dodano je :: program.cpp";
+                #endif
+                //**********************
             }
-
-
 
            if(!baza.commit())
            {
                //******DEBUG_LOG*******
                #ifdef LOG
-               qDebug()<<"Failed to commit";
+               qDebug()<<"Failed to commit :: program.cpp";
                #endif
                //**********************
 
@@ -694,7 +659,7 @@ void Program::on_btnPmodyfikuj_clicked()
 
            //******DEBUG_LOG*******
            #ifdef LOG
-           qDebug() << "Inserted using Qt Transaction";
+           qDebug() << "Inserted using Qt Transaction :: program.cpp";
            #endif
            //**********************
 
@@ -703,7 +668,7 @@ void Program::on_btnPmodyfikuj_clicked()
         {
             //******DEBUG_LOG*******
             #ifdef LOG
-            qDebug() << "Failed to start transaction mode";
+            qDebug() << "Failed to start transaction mode :: program.cpp";
             #endif
             //**********************
         }
@@ -712,6 +677,7 @@ void Program::on_btnPmodyfikuj_clicked()
 
     showRecords();
 }
+//~MODYFIKACJA DANYCH UZYTKOWNIKA OKIENKO UZYTKOWNIKA
 
 //usuniecie uzytkownika z zabezpieczeniem przed usuwaniem admina
 void Program::on_btnPusun_clicked()
@@ -721,10 +687,14 @@ void Program::on_btnPusun_clicked()
 
         QSqlDatabase baza = QSqlDatabase::database();
 
+        //******DEBUG_LOG*******
+        #ifdef LOG
         if(!baza.open())
         {
-            qDebug() << "nie otwarta";
+            qDebug() << "nie otwarta baza :: program.cpp";
         }
+        #endif
+        //**********************
 
         if(baza.transaction())
         {
@@ -733,59 +703,46 @@ void Program::on_btnPusun_clicked()
 
             QMessageBox::StandardButton reply;
 
-            reply = msgBox.question(this, "WARRRNING", "Czy na pewno chcesz usunac tego uzytkownika", QMessageBox::Yes | QMessageBox::No);
+            reply = msgBox.question(this, "WARRRNING", "CZY NA PEWNO CHCESZ USUNAC UZYTKOWNIKA", QMessageBox::Yes | QMessageBox::No);
 
             QSqlQuery query(baza);
 
             if(!(login == "admin") && reply == QMessageBox::Yes)
             {
             query.prepare("DELETE FROM `Gabinet`.`godziny` WHERE uzytkownik_id = '" +  QString::number(id_rekordu) + "';");
+
             query.exec();
+
             query.prepare("DELETE FROM `Gabinet`.`uzytkownik` WHERE uzytkownik_id = '" +  QString::number(id_rekordu) + "';");
+
             query.exec();
+
             clearRecord();
 
-            QMessageBox msgBox;
+            msgOK("WARNING", "USUNIETO UZYTKOWNIKA");
 
-            msgBox.setWindowTitle("WARNING");
-
-            msgBox.setInformativeText("usunieto uzytkownika");
-
-            msgBox.setStandardButtons(QMessageBox::Ok);
-
-            //msgBox.setDefaultButton(QMessageBox::Retry);
-            int ret = msgBox.exec();
             }
             else
             {
-                QMessageBox msgBox;
-
-                msgBox.setWindowTitle("ERROR");
-
-                msgBox.setInformativeText("Blad usuniecia uzytkownika");
-
-                msgBox.setStandardButtons(QMessageBox::Retry);
-
-                //msgBox.setDefaultButton(QMessageBox::Retry);
-                int ret = msgBox.exec();
+                msgRetry("ERROR", "USUWANIE UZYTKOWNIKA NIE POWIODLO SIE");
             }
 
             if( !query.exec() )
             {
                 //******DEBUG_LOG*******
                 #ifdef LOG
-                qDebug() << "Failed to add tag";
+                qDebug() << "Failed to add tag :: program.cpp";
                 #endif
                 //**********************
 
-                //qFatal( "Failed to add tag" );
+               msgRetry("ERROR", "USUWNAIE UZYTKOWNIKA SIE NIE POWIODLO");
             }
 
            if(!baza.commit())
            {
                //******DEBUG_LOG*******
                #ifdef LOG
-               qDebug()<<"Failed to commit";
+               qDebug()<<"Failed to commit :: program.cpp";
                #endif
                //**********************
 
@@ -794,7 +751,7 @@ void Program::on_btnPusun_clicked()
 
            //******DEBUG_LOG*******
            #ifdef LOG
-           qDebug() << "Inserted using Qt Transaction";
+           qDebug() << "Inserted using Qt Transaction :: program.cpp";
            #endif
            //**********************
 
@@ -803,7 +760,7 @@ void Program::on_btnPusun_clicked()
         {
             //******DEBUG_LOG*******
             #ifdef LOG
-            qDebug() << "Failed to start transaction mode";
+            qDebug() << "Failed to start transaction mode :: program.cpp";
             #endif
             //**********************
         }
@@ -811,16 +768,21 @@ void Program::on_btnPusun_clicked()
 
     showRecords();
 }
+//~USUNIECIE UZYTKOWNIKA OKIENKO UZYTKOWNIKA
 
 void Program::showRecords()
 {
 
     QSqlDatabase baza = QSqlDatabase::database();
 
+    //******DEBUG_LOG*******
+    #ifdef LOG
     if(!baza.open())
     {
-        qDebug() << "nie otwarta";
+        qDebug() << "nie otwarta baza :: program.cpp";
     }
+    #endif
+    //**********************
 
     queryModel = new QSqlQueryModel(this);
 
@@ -844,17 +806,7 @@ void Program::showRecords()
         #endif
         //**********************
 
-        QMessageBox msgBox;
-
-        msgBox.setWindowTitle("ERROR");
-
-        msgBox.setInformativeText("Blad polaczenia z baza danych");
-
-        msgBox.setStandardButtons(QMessageBox::Retry | QMessageBox::Close);
-
-        msgBox.setDefaultButton(QMessageBox::Retry);
-
-        int ret = msgBox.exec();
+        MsgBladLaczeniaBazy();
     }
 }
 
@@ -897,29 +849,31 @@ void Program::clearRecord()
     this->ui->txtUopis->clear();
 }
 
-
+//ZMIANA STANU PRZYCIKU CZY JEST PRACOWNIKIEM
 void Program::on_cbP_stateChanged(int arg1)
 {;
     Qt::CheckState result = this->ui->cbP->checkState();
+
     if(result == Qt::Checked)
     {
         this->ui->boxGodiznyPracy->setEnabled(1);
+
         this->ui->boxGodiznyPracy->setVisible(1);
     }
     else
     {
         this->ui->boxGodiznyPracy->setEnabled(0);
+
         this->ui->boxGodiznyPracy->setVisible(0);
     }
 }
 
-//QVector<QString> czasStart = {this->ui->pon, "txtwtOd", "txtsrOd", "txtczwOd", "txtptOd"};
+//czy trzeba do trzech po PRZECINKU SPRAWDZIC??!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-
-//czy trzeba do trzech po :
+//USTAWIANIE GODZIN PRACY -> PRZYCIKI GODZIN
 void Program::on_btn7_15_clicked()
 {
-   czasPracy("07:00:00", "15:00:00");
+    czasPracy("07:00:00", "15:00:00");
 }
 
 void Program::on_btn8_16_clicked()
@@ -956,8 +910,8 @@ void Program::czasPracy(QString poczatek, QString koniec)
         czasKoniec[i]->setText(koniec);
     }
 
-
 }
+//~USTAWIANIE CZASU GODZIN PRACY
 
 //---------------------------------------------------------------------USLUGI----------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------------------------------
@@ -972,10 +926,14 @@ void Program::showUslugi()
 {
     QSqlDatabase baza = QSqlDatabase::database();
 
+    //******DEBUG_LOG*******
+    #ifdef LOG
     if(!baza.open())
     {
-        qDebug() << "nie otwarta";
+        qDebug() << "nie otwarta baza :: program.cpp";
     }
+    #endif
+    //**********************
 
     queryModel = new QSqlQueryModel(this);
 
@@ -999,21 +957,12 @@ void Program::showUslugi()
         #endif
         //**********************
 
-        QMessageBox msgBox;
-
-        msgBox.setWindowTitle("ERROR");
-
-        msgBox.setInformativeText("Blad polaczenia z baza danych");
-
-        msgBox.setStandardButtons(QMessageBox::Retry | QMessageBox::Close);
-
-        msgBox.setDefaultButton(QMessageBox::Retry);
-
-        int ret = msgBox.exec();
+        MsgBladLaczeniaBazy();
     }
 
 }
 
+//DODANIE USLUGI
 void Program::on_btnUDodaj_clicked()
 {
     QString nazwa = this->ui->txtUnazwa->text();
@@ -1026,7 +975,7 @@ void Program::on_btnUDodaj_clicked()
 
     //******DEBUG_LOG*******
     #ifdef LOG
-    qDebug() << "Wpisane dane -> nazwa: " << nazwa << "cena: " << cena << "czas: " << czas << "opis: " << opis  ;
+    qDebug() << "Wpisane dane -> nazwa: " << nazwa << "cena: " << cena << "czas: " << czas << "opis: " << opis  << " :: program.cpp";
     #endif
     //**********************
 
@@ -1034,10 +983,14 @@ void Program::on_btnUDodaj_clicked()
 
         QSqlDatabase baza = QSqlDatabase::database();
 
+        //******DEBUG_LOG*******
+        #ifdef LOG
         if(!baza.open())
         {
-            qDebug() << "nie otwarta";
+            qDebug() << "nie otwarta baza :: program.cpp";
         }
+        #endif
+        //**********************
 
         if(baza.transaction())
         {
@@ -1047,40 +1000,35 @@ void Program::on_btnUDodaj_clicked()
 
                 query.prepare("INSERT INTO `Gabinet`.`uslugi` (`nazwa`, `cena`, `czas`, `opis`) "
                               "VALUES (:nazwa, :cena, :czas, :opis);");
+
                 query.bindValue( ":nazwa", nazwa);
+
                 query.bindValue( ":cena", cena );
+
                 query.bindValue( ":czas", czas );
+
                 query.bindValue( ":opis", opis );
 
                 if( !query.exec() )
                 {
                     //******DEBUG_LOG*******
                     #ifdef LOG
-                    qDebug() << "Failed to add tag";
+                    qDebug() << "Failed to add tag :: program.cpp";
                     #endif
                     //**********************
 
-                    //qFatal( "Failed to add tag" );
+                    msgRetry("ERROR", "NIE UDALO SIE DODAC USLUGI");
                 }
                 else
                 {
-                    QMessageBox msgBox;
-
-                    msgBox.setWindowTitle("WARNING");
-
-                    msgBox.setInformativeText("dodano uzytkownika");
-
-                    msgBox.setStandardButtons(QMessageBox::Ok);
-
-                    //msgBox.setDefaultButton(QMessageBox::Retry);
-                    int ret = msgBox.exec();
+                    msgOK("WARNING", "DODANO USLUGE");
                 }
 
                if(!baza.commit())
                {
                    //******DEBUG_LOG*******
                    #ifdef LOG
-                   qDebug()<<"Failed to commit";
+                   qDebug()<<"Failed to commit :: program.cpp";
                    #endif
                    //**********************
 
@@ -1089,7 +1037,7 @@ void Program::on_btnUDodaj_clicked()
 
                //******DEBUG_LOG*******
                #ifdef LOG
-               qDebug() << "Inserted using Qt Transaction";
+               qDebug() << "Inserted using Qt Transaction :: program.cpp";
                #endif
                //**********************
             }
@@ -1098,7 +1046,7 @@ void Program::on_btnUDodaj_clicked()
         {
             //******DEBUG_LOG*******
             #ifdef LOG
-            qDebug() << "Failed to start transaction mode";
+            qDebug() << "Failed to start transaction mode :: program.cpp";
             #endif
             //**********************
         }
@@ -1106,18 +1054,21 @@ void Program::on_btnUDodaj_clicked()
 
     showUslugi();
 }
+//~DODANIE USLUGI
 
-
+//USUWANIE USLUGI
 void Program::on_btnUUsun_clicked()
 {
-   // QString login = this->ui->txtPLogin->text();
-
     QSqlDatabase baza = QSqlDatabase::database();
 
+    //******DEBUG_LOG*******
+    #ifdef LOG
     if(!baza.open())
     {
-        qDebug() << "nie otwarta";
+        qDebug() << "nie otwarta baza :: program.cpp";
     }
+    #endif
+    //**********************
 
     if(baza.transaction())
     {
@@ -1126,57 +1077,44 @@ void Program::on_btnUUsun_clicked()
 
         QMessageBox::StandardButton reply;
 
-        reply = msgBox.question(this, "WARRRNING", "Czy na pewno chcesz usunac ta usluge", QMessageBox::Yes | QMessageBox::No);
+        reply = msgBox.question(this, "WARRRNING", "CZY NA PEWNO CHCESZ USUNAC USLUGE", QMessageBox::Yes | QMessageBox::No);
 
         QSqlQuery query(baza);
 
         if(reply == QMessageBox::Yes)
         {
             query.prepare("DELETE FROM `Gabinet`.`uslugi` WHERE uslugi_id = '" +  QString::number(id_rekordu) + "';");
+
             query.exec();
+
             clearRecord();
 
-            QMessageBox msgBox;
+            msgOK("WARNING", "USUNIETO USLUGE");
 
-            msgBox.setWindowTitle("WARNING");
-
-            msgBox.setInformativeText("usunieto usluge");
-
-            msgBox.setStandardButtons(QMessageBox::Ok);
-
-            //msgBox.setDefaultButton(QMessageBox::Retry);
-            int ret = msgBox.exec();
         }
         else
         {
-            QMessageBox msgBox;
 
-            msgBox.setWindowTitle("ERROR");
+            msgRetry("ERROR", "BLAD USUWANIA USLUGI");
 
-            msgBox.setInformativeText("Blad usuniecia uslugi");
-
-            msgBox.setStandardButtons(QMessageBox::Retry);
-
-            //msgBox.setDefaultButton(QMessageBox::Retry);
-            int ret = msgBox.exec();
         }
 
         if( !query.exec() )
         {
             //******DEBUG_LOG*******
             #ifdef LOG
-            qDebug() << "Failed to add tag";
+            qDebug() << "Failed to add tag :: program.cpp";
             #endif
             //**********************
 
-            //qFatal( "Failed to add tag" );
+            msgRetry("ERROR", "BLAD USUWANIA USLUGI");
         }
 
        if(!baza.commit())
        {
            //******DEBUG_LOG*******
            #ifdef LOG
-           qDebug()<<"Failed to commit";
+           qDebug()<<"Failed to commit :: program.cpp";
            #endif
            //**********************
 
@@ -1185,7 +1123,7 @@ void Program::on_btnUUsun_clicked()
 
        //******DEBUG_LOG*******
        #ifdef LOG
-       qDebug() << "Inserted using Qt Transaction";
+       qDebug() << "Inserted using Qt Transaction :: program.cpp";
        #endif
        //**********************
 
@@ -1194,15 +1132,16 @@ void Program::on_btnUUsun_clicked()
     {
         //******DEBUG_LOG*******
         #ifdef LOG
-        qDebug() << "Failed to start transaction mode";
+        qDebug() << "Failed to start transaction mode :: program.cpp";
         #endif
         //**********************
     }
 
     showUslugi();
 }
+//~USUWANIE USLUGI
 
-
+//MODYFIKUJ USLUGI
 void Program::on_btnUModyfikuj_clicked()
 {
     QString nazwa = this->ui->txtUnazwa->text();
@@ -1212,9 +1151,10 @@ void Program::on_btnUModyfikuj_clicked()
     QString czas = this->ui->txtUczas->text();
 
     QString opis= this->ui->txtUopis->toPlainText();
+
     //******DEBUG_LOG*******
     #ifdef LOG
-    qDebug() << "Wpisane dane -> nazwa: " << nazwa << "cena: " << cena << "czas: " << czas << "opis: " << opis  ;
+    qDebug() << "Wpisane dane -> nazwa: " << nazwa << "cena: " << cena << "czas: " << czas << "opis: " << opis  << " :: program.cpp";
     #endif
     //**********************
 
@@ -1222,10 +1162,14 @@ void Program::on_btnUModyfikuj_clicked()
 
         QSqlDatabase baza = QSqlDatabase::database();
 
+        //******DEBUG_LOG*******
+        #ifdef LOG
         if(!baza.open())
         {
-            qDebug() << "nie otwarta";
+            qDebug() << "nie otwarta baza :: program.cpp";
         }
+        #endif
+        //**********************
 
         if(baza.transaction())
         {
@@ -1241,31 +1185,22 @@ void Program::on_btnUModyfikuj_clicked()
 
                 //******DEBUG_LOG*******
                 #ifdef LOG
-                qDebug() << "Failed to add tag";
+                qDebug() << "Failed to add tag :: program.cpp";
                 #endif
                 //**********************
 
-                //qFatal( "Failed to add tag" );
+                msgRetry("ERROR", "NIE UDALO SIE ZMODYFIKOWAC DANYCH USLUGI");
             }
             else
             {
-                QMessageBox msgBox;
-
-                msgBox.setWindowTitle("WARNING");
-
-                msgBox.setInformativeText("zmodyfikowane dane uslugi");
-
-                msgBox.setStandardButtons(QMessageBox::Ok);
-
-                //msgBox.setDefaultButton(QMessageBox::Retry);
-                int ret = msgBox.exec();
+                msgOK("WARNING", "ZMODYFIKOWANE DANE USLUGI");
             }
 
            if(!baza.commit())
            {
                //******DEBUG_LOG*******
                #ifdef LOG
-               qDebug()<<"Failed to commit";
+               qDebug()<<"Failed to commit :: program.cpp";
                #endif
                //**********************
 
@@ -1274,7 +1209,7 @@ void Program::on_btnUModyfikuj_clicked()
 
            //******DEBUG_LOG*******
            #ifdef LOG
-           qDebug() << "Inserted using Qt Transaction";
+           qDebug() << "Inserted using Qt Transaction :: program.cpp";
            #endif
            //**********************
 
@@ -1283,7 +1218,7 @@ void Program::on_btnUModyfikuj_clicked()
         {
             //******DEBUG_LOG*******
             #ifdef LOG
-            qDebug() << "Failed to start transaction mode";
+            qDebug() << "Failed to start transaction mode :: program.cpp";
             #endif
             //**********************
         }
@@ -1292,8 +1227,9 @@ void Program::on_btnUModyfikuj_clicked()
 
     showUslugi();
 }
+//~MODYFIKUJ USLUGI
 
-
+//NACISNIECI PRZYCISKU W USLUGACH
 void Program::on_dgZabiegi_clicked(const QModelIndex &index)
 {
     this->ui->btnUModyfikuj->setEnabled(1);
@@ -1306,8 +1242,8 @@ void Program::on_dgZabiegi_clicked(const QModelIndex &index)
 
     //******DEBUG_LOG*******
     #ifdef LOG
-    //qDebug() << "nacisnieta komorka: " << currentCell;
-    qDebug() << "komorka o numerze id: " <<  id_rekordu;
+    //qDebug() << "nacisnieta komorka: " << currentCell << " :: program.cpp";
+    qDebug() << "komorka o numerze id: " <<  id_rekordu << " :: program.cpp";
     #endif
     //**********************
 
@@ -1327,12 +1263,12 @@ void Program::on_dgZabiegi_clicked(const QModelIndex &index)
 
     this->ui->txtUopis->setPlainText(tabOpis);
 
-    showUslugi();
-
 }
+//~NACISNIECIE PRZYCISKU W USLUGACH
 
-//usuniecie w usluach dziala i modyfikacja gdy juz nie ma uslug trzeba na to sie  uodpornic i optymalizacja kodu jezeli powtarzajacy sie kod np. wyszukiwanie i wrzucanie do siatki
+//------------------------------------------------PRACOWNIK - USLUGA -------------------------------------------------------
 
+//wcisniecie przycisku szukaj w okienku dodawania uslug do pracownika
 void Program::on_btnPUSzukaj_clicked()
 {
     pokaszPracownikow();
@@ -1342,14 +1278,19 @@ void Program::pokaszPracownikow()
 {
     QSqlDatabase baza = QSqlDatabase::database();
 
+    //******DEBUG_LOG*******
+    #ifdef LOG
     if(!baza.open())
     {
-        qDebug() << "nie otwarta";
+        qDebug() << "nie otwarta baza :: program.cpp";
     }
+    #endif
+    //**********************
 
     queryModel = new QSqlQueryModel(this);
 
-    queryModel->setQuery("SELECT uzytkownik_id, imie, nazwisko, uzytkownik_nazwa AS login, pracownik FROM uzytkownik WHERE CONCAT(imie, ' ', nazwisko, uzytkownik_nazwa) LIKE '%"+ this->ui->txtPSzukaj->text() +"%' AND pracownik = '1' ORDER BY nazwisko;");
+    queryModel->setQuery("SELECT uzytkownik_id, imie, nazwisko, uzytkownik_nazwa AS login, pracownik FROM uzytkownik "
+                         "WHERE CONCAT(imie, ' ', nazwisko, uzytkownik_nazwa) LIKE '%"+ this->ui->txtPUSzukaj->text() +"%' AND pracownik = '1' ORDER BY nazwisko;");
 
     try {
 
@@ -1370,34 +1311,21 @@ void Program::pokaszPracownikow()
         #endif
         //**********************
 
-        QMessageBox msgBox;
-
-        msgBox.setWindowTitle("ERROR");
-
-        msgBox.setInformativeText("Blad polaczenia z baza danych");
-
-        msgBox.setStandardButtons(QMessageBox::Retry | QMessageBox::Close);
-
-        msgBox.setDefaultButton(QMessageBox::Retry);
-
-        int ret = msgBox.exec();
+        MsgBladLaczeniaBazy();
     }
 
 }
 
-
-
+//wcisniety rekord pracownika w okienku dodawania uslug do uzytkownika
 void Program::on_dgPUPracownicy_clicked(const QModelIndex &index)
 {
-    //wyszukiwanie uslugi ktore wykonuje pracownik
-    //dobranie się do numeru id kliknietego wiersza i do aktualnie nacisnietej komorki
-    //QString currentCell = this->ui->dgUzytkownicy->currentIndex().data(Qt::DisplayRole).toString();
+
     id_rekordu = this->ui->dgPUPracownicy->selectionModel()->selectedIndexes().at(0).data(Qt::DisplayRole).toInt();
 
     //******DEBUG_LOG*******
     #ifdef LOG
-    //qDebug() << "nacisnieta komorka: " << currentCell;
-    qDebug() << "komorka o numerze id: " <<  id_rekordu;
+    //qDebug() << "nacisnieta komorka: " << currentCell << " :: program.cpp";
+    qDebug() << "komorka o numerze id: " <<  id_rekordu << " :: program.cpp";
     #endif
     //**********************
 
@@ -1409,11 +1337,9 @@ void Program::on_dgPUPracownicy_clicked(const QModelIndex &index)
 
     this->ui->txtPUNazwisko->setText(tabNazwisko);
 
-    //Wypelnianie uslug pracownika
-
     PokazUslugi();
 
-    //pokaszPracownikow();
+    PokazUslugiPracownika();
 
 }
 
@@ -1421,19 +1347,31 @@ void Program::PokazUslugi()
 {
     QSqlDatabase baza = QSqlDatabase::database();
 
+    //******DEBUG_LOG*******
+    #ifdef LOG
     if(!baza.open())
     {
-        qDebug() << "nie otwarta";
+        qDebug() << "nie otwarta baza :: program.cpp";
     }
+    #endif
+    //**********************
 
+    /*
+    //TUTAJ PRZYKLAD JAKO TABELA
     QSqlTableModel *model = new QSqlTableModel;
 
     model->setTable("uslugi");
+
     model->select();
+    */
+
+    queryModel = new QSqlQueryModel(this);
+
+    queryModel->setQuery("SELECT * FROM uslugi ORDER BY nazwa;");
 
     try {
 
-        this->ui->dgPUDodajUsluge->setModel(model);
+        this->ui->dgPUDodajUsluge->setModel(queryModel);
 
         this->ui->dgPUDodajUsluge->setSelectionBehavior(QAbstractItemView::SelectRows); //zaznaczanie calego wiersza
 
@@ -1451,82 +1389,108 @@ void Program::PokazUslugi()
         #endif
         //**********************
 
-        QMessageBox msgBox;
-
-        msgBox.setWindowTitle("ERROR");
-
-        msgBox.setInformativeText("Blad polaczenia z baza danych");
-
-        msgBox.setStandardButtons(QMessageBox::Retry | QMessageBox::Close);
-
-        msgBox.setDefaultButton(QMessageBox::Retry);
-
-        int ret = msgBox.exec();
+        MsgBladLaczeniaBazy();
     }
 }
-/* queryModel = new QSqlQueryModel(this);
 
- queryModel->setQuery("SELECT uslugi.uslugi_id, uslugi.nazwa, uslugi.cena, uslugi.czas FROM uslugi, uzytkownik_usluga WHERE "
-                      "uslugi.uslugi_id = uzytkownik_usluga.uslugi_id AND uzytkownik_usluga.uzytkownik_id = "+ QString::number(id_rekordu) +"ORDER BY nazwa;");
+void Program::PokazUslugiPracownika()
+{
+    QSqlDatabase baza = QSqlDatabase::database();
 
- try {
+    //******DEBUG_LOG*******
+    #ifdef LOG
+    if(!baza.open())
+    {
+        qDebug() << "nie otwarta baza :: program.cpp";
+    }
+    #endif
+    //**********************
 
-     this->ui->dgPUUslugi->setModel(queryModel);
+    queryModel = new QSqlQueryModel(this);
 
-     this->ui->dgPUUslugi->setSelectionBehavior(QAbstractItemView::SelectRows); //zaznaczanie calego wiersza
+    queryModel->setQuery("SELECT uslugi.uslugi_id, uslugi.nazwa, uslugi.cena, uslugi.czas FROM uslugi, uzytkownik_usluga WHERE "
+                                         "uslugi.uslugi_id = uzytkownik_usluga.uslugi_id AND uzytkownik_usluga.uzytkownik_id = "+ QString::number(id_rekordu) +"ORDER BY nazwa;");
+    try {
 
-     //this->ui->dgPUUslugi->hideColumn(0); //chowanie kolumny z id
+        this->ui->dgPUUslugi->setModel(queryModel);
 
- } catch (const std::exception &e)
- {
+        this->ui->dgPUUslugi->setSelectionBehavior(QAbstractItemView::SelectRows); //zaznaczanie calego wiersza
 
-     //******DEBUG_LOG*******
-     #ifdef LOG
-     qDebug()<<"Blad polaczenia z baza danych! :: program.cpp";
-     qDebug() << "ERROR load: " << baza.lastError().text();
-     #endif
-     //**********************
+        //this->ui->dgPUUslugi->hideColumn(0); //chowanie kolumny z id
 
-     QMessageBox msgBox;
+    } catch (const std::exception &e)
+    {
 
-     msgBox.setWindowTitle("ERROR");
+        //******DEBUG_LOG*******
+        #ifdef LOG
+        qDebug()<<"Blad polaczenia z baza danych! :: program.cpp";
+        qDebug() << "ERROR load: " << baza.lastError().text();
+        #endif
+        //**********************
 
-     msgBox.setInformativeText("Blad polaczenia z baza danych");
+        MsgBladLaczeniaBazy();
+    }
+}
 
-     msgBox.setStandardButtons(QMessageBox::Retry | QMessageBox::Close);
-
-     msgBox.setDefaultButton(QMessageBox::Retry);
-
-     int ret = msgBox.exec();
- }
-
- //Wypelnianie wszytskich uslug*/
-
-
+//klikniecie uslugi w wyborze uslug
 void Program::on_dgPUDodajUsluge_clicked(const QModelIndex &index)
 {
-    pokaszPracownikow();
+    id_uslugiDoDodania = this->ui->dgPUDodajUsluge->selectionModel()->selectedIndexes().at(0).data(Qt::DisplayRole).toInt();
+    //******DEBUG_LOG*******
+    #ifdef LOG
+    //qDebug() << "nacisnieta komorka: " << currentCell << " :: program.cpp";
+    qDebug() << "komorka o numerze id_uslugi: " <<  id_uslugiDoDodania << " :: program.cpp";
+    #endif
+    //**********************
 
 }
 
-void Program::on_dgPUPracownicy_activated(const QModelIndex &index)
+
+//---------------------------------------------WIADOMOSCI--------------------------------------------------------
+//------------------------------OK-------------RETRY------------BLAD_LACZENIA------------------------------------
+void Program::MsgBladLaczeniaBazy()
 {
+    QMessageBox msgBox;
 
+    msgBox.setWindowTitle("ERROR");
+
+    msgBox.setInformativeText("Blad polaczenia z baza danych");
+
+    msgBox.setStandardButtons(QMessageBox::Retry | QMessageBox::Close);
+
+    msgBox.setDefaultButton(QMessageBox::Retry);
+
+    msgBox.exec();
 }
 
-/*
+void Program::msgOK(QString title, QString msg)
+{
+    QMessageBox msgBox;
 
-//QSqlDatabase db = QSqlDatabase::addDatabase("QPSQL");
-db.setHostName("acidalia");
-db.setDatabaseName("customdb");
-db.setUserName("mojito");
-db.setPassword("J0a1m8");
-bool ok = db.open();
+    msgBox.setWindowTitle(title);
 
-//to dodaemy jak otrzebuje uzywac bez open close ciglego open jest raz i close jest tez raz na koncu
-QSqlDatabase db = QSqlDatabase::database();
+    msgBox.setInformativeText(msg);
 
-*/
+    msgBox.setStandardButtons(QMessageBox::Ok);
 
-//PRACOWNIK USLUGA - wyszukiwanie po literach nie zgadza sie -> bazy danych polaczenie po logowaniu pooprawic
+    msgBox.exec();
+}
 
+void Program::msgRetry(QString title, QString msg)
+{
+    QMessageBox msgBox;
+
+    msgBox.setWindowTitle(title);
+
+    msgBox.setInformativeText(msg);
+
+    msgBox.setStandardButtons(QMessageBox::Retry);
+
+    msgBox.exec();
+}
+
+//--------------------------DO POPRAWY-----------------------
+
+
+//wzcytywanie informacji z bazy danych -> jedna funkcja ze zmienna ktora tabela i selekt
+//w uslugach dziala opcja modyfikuj i usun gdy wszystkie rekordy usuniete sa -> uodpornic sie

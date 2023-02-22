@@ -84,18 +84,16 @@ private slots:
 
     void on_dgPUDodajUsluge_clicked(const QModelIndex &index);
 
-    void on_dgPUPracownicy_activated(const QModelIndex &index);
-
 private:
 
-    struct Uzytkownik
+    /*struct Uzytkownik
     {
         int id = 0;
         QString imie = "";
         QString nazwisko = "";
         QString haslo = "";
         bool jestPracownikiem = false;
-    };
+    };*/
 
     void PobieranieDanych(QString nazwaUzytkownikaLog, struct Uzytkownik *uzytkownik);
 
@@ -114,6 +112,14 @@ private:
     void pokaszPracownikow();
 
     void PokazUslugi();
+
+    void MsgBladLaczeniaBazy();
+
+    void msgOK(QString title, QString msg);
+
+    void msgRetry(QString title, QString msg);
+
+    void PokazUslugiPracownika();
 
     Ui::Program *ui;
 

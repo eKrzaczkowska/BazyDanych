@@ -141,7 +141,7 @@ void logInWindow::on_btnZaloguj_clicked()
 
             msgBox.setDefaultButton(QMessageBox::Retry);
 
-            int ret = msgBox.exec();
+            msgBox.exec();
 
         }
 
