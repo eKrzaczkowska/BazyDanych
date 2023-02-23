@@ -16,6 +16,8 @@
 #include <QtSql/QSqlTableModel>
 #include <QFile>
 #include <QSqlQuery>
+#include <QRegularExpressionValidator>
+//#include <QRegExpValidator>
 
 namespace Ui {
 class Program;
@@ -86,6 +88,16 @@ private slots:
 
     void on_dgPUUslugi_clicked(const QModelIndex &index);
 
+    void on_btnKSzukaj_clicked();
+
+    void on_btnKDodaj_clicked();
+
+    void on_btnKModyfikuj_clicked();
+
+    void on_btnKUsun_clicked();
+
+    void on_dgKlienci_clicked(const QModelIndex &index);
+
 private:
 
     /*struct Uzytkownik
@@ -126,6 +138,8 @@ private:
     void DodajUsluge();
 
     void usunUsluge();
+
+    void szukajKlient();
 
     Ui::Program *ui;
 

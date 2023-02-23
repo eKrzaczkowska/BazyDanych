@@ -64,6 +64,21 @@ Program::Program(QString nazwaUzytkownikaLog) :
     #endif
     //**********************
 
+    //ustawianie co moga zwierac pola tekstowe w okienku klient
+
+    this->ui->txtKnumer->setValidator(new QRegularExpressionValidator(QRegularExpression("[1-9][0-9]{4}")));
+    this->ui->txtKtelefon->setValidator(new QRegularExpressionValidator(QRegularExpression("[1-9][0-9]{8}")));
+    this->ui->txtKImie->setValidator(new QRegularExpressionValidator(QRegularExpression("[A-Z][a-z]*")));
+    this->ui->txtKNazwisko->setValidator(new QRegularExpressionValidator(QRegularExpression("[A-Z][a-z]*")));
+    this->ui->txtKmiejscowosc->setValidator(new QRegularExpressionValidator(QRegularExpression("[A-Za-z]*")));
+    this->ui->txtKpoczta->setValidator(new QRegularExpressionValidator(QRegularExpression("[0-9]{2}-[0-9]{3}")));
+    this->ui->txtKulica->setValidator(new QRegularExpressionValidator(QRegularExpression("[A-Za-z]*")));
+
+
+
+
+            //QRegExpValidator(QRegExp("[0-9]*"), &le));
+
 
 }
 
@@ -847,6 +862,23 @@ void Program::clearRecord()
     this->ui->txtUczas->clear();
 
     this->ui->txtUopis->clear();
+
+    this->ui->txtKImie->clear();
+
+    this->ui->txtKNazwisko->clear();
+
+    this->ui->txtKemail->clear();
+
+    this->ui->txtKmiejscowosc->clear();
+
+    this->ui->txtKnumer->clear();
+
+    this->ui->txtKpoczta->clear();
+
+    this->ui->txtKulica->clear();
+
+    this->ui->txtKtelefon->clear();
+
 }
 
 //ZMIANA STANU PRZYCIKU CZY JEST PRACOWNIKIEM
@@ -1674,6 +1706,378 @@ void Program::usunUsluge()
     }
 }
 
+//----------------------------------------------------KLIENCI------------------------------------------------------
+
+void Program::on_btnKSzukaj_clicked()
+{
+    szukajKlient();
+}
+
+
+void Program::on_btnKDodaj_clicked()
+{
+    QString imie = this->ui->txtKImie->text();
+
+    QString nazwisko = this->ui->txtKNazwisko->text();
+
+    QString email = this->ui->txtKemail->text();
+
+    QString telefon = this->ui->txtKtelefon->text();
+
+    QString ulica = this->ui->txtKulica->text();
+
+    QString Miejscowosc = this->ui->txtKmiejscowosc->text();
+
+    QString poczta = this->ui->txtKpoczta->text();
+    //numer mieszkania
+    //modyfikacja
+
+    //******DEBUG_LOG*******
+    #ifdef LOG
+    if(!baza.open())
+    {
+        qDebug() << "nie otwarta baza :: program.cpp";
+    }
+    #endif
+    //**********************
+
+    QSqlDatabase baza = QSqlDatabase::database();
+
+    if(baza.transaction())
+    {
+        if(true)
+        {
+            QSqlQuery query(baza);
+
+            query.prepare("INSERT INTO `Gabinet`.`klient` (`imie`, `nazwisko`, `email`, `telefon`, `ulica`, `Miejscowosc`, `poczta`) "
+                          "VALUES (:imie, :nazwisko, :email, :telefon, :ulica, :Miejscowosc, :poczta);");
+
+            query.bindValue( ":imie", imie);
+
+            query.bindValue( ":nazwisko", nazwisko);
+
+            query.bindValue( ":email", email);
+
+            query.bindValue( ":telefon", telefon);
+
+            query.bindValue( ":ulica", ulica);
+
+            query.bindValue( ":Miejscowosc", Miejscowosc);
+
+            query.bindValue( ":poczta", poczta);
+
+            if( !query.exec() )
+            {
+                //******DEBUG_LOG*******
+                #ifdef LOG
+                qDebug() << "Failed to add tag :: program.cpp";
+                #endif
+                //**********************
+
+                msgRetry("ERROR", "NIE UDALO SIE DODAC KLIENTA");
+            }
+            else
+            {
+                msgOK("WARNING", "DODANO KLIENTA");
+            }
+
+           if(!baza.commit())
+           {
+               //******DEBUG_LOG*******
+               #ifdef LOG
+               qDebug()<<"Failed to commit :: program.cpp";
+               #endif
+               //**********************
+
+               baza.rollback();
+           }
+
+           //******DEBUG_LOG*******
+           #ifdef LOG
+           qDebug() << "Inserted using Qt Transaction :: program.cpp";
+           #endif
+           //**********************
+        }
+    }
+    else
+    {
+        //******DEBUG_LOG*******
+        #ifdef LOG
+        qDebug() << "Failed to start transaction mode :: program.cpp";
+        #endif
+        //**********************
+    }
+
+    szukajKlient();
+}
+
+
+void Program::on_btnKModyfikuj_clicked()
+{
+    QString imie = this->ui->txtKImie->text();
+
+    QString nazwisko = this->ui->txtKNazwisko->text();
+
+    QString email = this->ui->txtKemail->text();
+
+    QString telefon = this->ui->txtKtelefon->text();
+
+    QString ulica = this->ui->txtKulica->text();
+
+    QString Miejscowosc = this->ui->txtKmiejscowosc->text();
+
+    QString poczta = this->ui->txtKpoczta->text();
+
+    //******DEBUG_LOG*******
+    #ifdef LOG
+    qDebug() << "Wpisane dane -> imie: " << imie << "nazwisko: " << nazwisko << "nazwa: " << login << "czy jest pracownikiem?: " << pracownik << " :: program.cpp";
+    #endif
+    //**********************
+
+    {
+        QSqlDatabase baza = QSqlDatabase::database();
+
+        //******DEBUG_LOG*******
+        #ifdef LOG
+        if(!baza.open())
+        {
+            qDebug() << "nie otwarta baza :: program.cpp";
+        }
+        #endif
+        //**********************
+
+
+        if(baza.transaction())
+        {
+
+
+            QSqlQuery query(baza);
+
+            query.prepare("UPDATE `Gabinet`.`klient` SET `imie` = '"+ imie +"', `nazwisko` = '"+ nazwisko +"', `email` = '"+ email +"', `telefon` = '"
+                          ""+ telefon +"', `ulica` = '"+ ulica +"', `Miejscowosc` = '"+ Miejscowosc +"', `poczta` = '"+ poczta +"' WHERE klient_id = '" +  QString::number(id_rekordu) + "';");
+
+            if( !query.exec() )
+            {
+
+                //******DEBUG_LOG*******
+                #ifdef LOG
+                qDebug() << "Failed to add tag :: program.cpp";
+                #endif
+                //**********************
+
+                msgRetry("ERROR", "NIE ZMODYFIKOWANO DANYCH KLIENTA");
+            }
+            else
+            {
+                msgOK("WARNING", "ZMODYFIKOWANO DANE KLIENTA");
+            }
+
+
+           if(!baza.commit())
+           {
+               //******DEBUG_LOG*******
+               #ifdef LOG
+               qDebug()<<"Failed to commit :: program.cpp";
+               #endif
+               //**********************
+
+               baza.rollback();
+           }
+
+           //******DEBUG_LOG*******
+           #ifdef LOG
+           qDebug() << "Inserted using Qt Transaction :: program.cpp";
+           #endif
+           //**********************
+
+        }
+        else
+        {
+            //******DEBUG_LOG*******
+            #ifdef LOG
+            qDebug() << "Failed to start transaction mode :: program.cpp";
+            #endif
+            //**********************
+        }
+
+    }
+
+        szukajKlient();
+}
+
+
+void Program::on_btnKUsun_clicked()
+{
+
+    QSqlDatabase baza = QSqlDatabase::database();
+
+    //******DEBUG_LOG*******
+    #ifdef LOG
+    if(!baza.open())
+    {
+        qDebug() << "nie otwarta baza :: program.cpp";
+    }
+    #endif
+    //**********************
+
+    if(baza.transaction())
+    {
+
+        QMessageBox msgBox;
+
+        QMessageBox::StandardButton reply;
+
+        reply = msgBox.question(this, "WARRRNING", "CZY NA PEWNO CHCESZ USUNAC KLIENTA", QMessageBox::Yes | QMessageBox::No);
+
+        QSqlQuery query(baza);
+
+        if(reply == QMessageBox::Yes)
+        {
+            query.prepare("DELETE FROM `Gabinet`.`klient` WHERE klient_id = '" +  QString::number(id_rekordu) + "';");
+
+            if( !query.exec() )
+            {
+                //******DEBUG_LOG*******
+                #ifdef LOG
+                qDebug() << "Failed to add tag :: program.cpp";
+                #endif
+                //**********************
+
+                msgRetry("ERROR", "USUWANIE KLIENTA SIE NIE POWIODLO BLAD LACZENIA Z BAZA");
+            }
+            else
+            {
+                msgOK("WARNING", "USUNIETO KLIENTA");
+
+                clearRecord();
+            }
+
+           if(!baza.commit())
+           {
+               //******DEBUG_LOG*******
+               #ifdef LOG
+               qDebug()<<"Failed to commit :: program.cpp";
+               #endif
+               //**********************
+
+               baza.rollback();
+           }
+
+           //******DEBUG_LOG*******
+           #ifdef LOG
+           qDebug() << "Inserted using Qt Transaction :: program.cpp";
+           #endif
+           //**********************
+
+        }
+        else
+        {
+            msgRetry("ERROR", "USUWANIE KLIENTA NIE POWIODLO SIE");
+        }
+    }
+    else
+    {
+        //******DEBUG_LOG*******
+        #ifdef LOG
+        qDebug() << "Failed to start transaction mode :: program.cpp";
+        #endif
+        //**********************
+    }
+
+    szukajKlient();
+
+}
+
+
+void Program::on_dgKlienci_clicked(const QModelIndex &index)
+{
+    this->ui->btnKModyfikuj->setEnabled(1);
+
+    this->ui->btnKUsun->setEnabled(1);
+
+    //dobranie się do numeru id kliknietego wiersza i do aktualnie nacisnietej komorki
+    //QString currentCell = this->ui->dgUzytkownicy->currentIndex().data(Qt::DisplayRole).toString();
+    id_rekordu = this->ui->dgKlienci->selectionModel()->selectedIndexes().at(0).data(Qt::DisplayRole).toInt();
+
+    //******DEBUG_LOG*******
+    #ifdef LOG
+    //qDebug() << "nacisnieta komorka: " << currentCell << " :: program.cpp";
+    qDebug() << "komorka o numerze id: " <<  id_rekordu << " :: program.cpp";
+    #endif
+    //**********************
+
+    QString imie = this->ui->dgKlienci->selectionModel()->selectedIndexes().at(1).data(Qt::DisplayRole).toString();
+
+    QString nazwisko = this->ui->dgKlienci->selectionModel()->selectedIndexes().at(2).data(Qt::DisplayRole).toString();
+
+    QString email = this->ui->dgKlienci->selectionModel()->selectedIndexes().at(3).data(Qt::DisplayRole).toString();
+
+    QString telefon = this->ui->dgKlienci->selectionModel()->selectedIndexes().at(4).data(Qt::DisplayRole).toString();
+
+    QString ulica = this->ui->dgKlienci->selectionModel()->selectedIndexes().at(5).data(Qt::DisplayRole).toString();
+
+    QString Miejscowosc = this->ui->dgKlienci->selectionModel()->selectedIndexes().at(6).data(Qt::DisplayRole).toString();
+
+    QString poczta = this->ui->dgKlienci->selectionModel()->selectedIndexes().at(7).data(Qt::DisplayRole).toString();
+
+    this->ui->txtKImie->setText(imie);
+
+    this->ui->txtKNazwisko->setText(nazwisko);
+
+    this->ui->txtKemail->setText(email);
+
+    this->ui->txtKtelefon->setText(telefon);
+
+    this->ui->txtKulica->setText(ulica);
+
+    this->ui->txtKmiejscowosc->setText(Miejscowosc);
+
+    this->ui->txtKpoczta->setText(poczta);
+
+}
+
+void Program::szukajKlient()
+{
+    QSqlDatabase baza = QSqlDatabase::database();
+
+    //******DEBUG_LOG*******
+    #ifdef LOG
+    if(!baza.open())
+    {
+        qDebug() << "nie otwarta baza :: program.cpp";
+    }
+    #endif
+    //**********************
+
+    queryModel = new QSqlQueryModel(this);
+
+    queryModel->setQuery("SELECT * FROM Gabinet.klient WHERE CONCAT(imie, ' ', nazwisko) "
+                         "LIKE '%"+ this->ui->txtKszukaj->text() +"%' ORDER BY nazwisko;");
+
+    try {
+
+        this->ui->dgKlienci->setModel(queryModel);
+
+        this->ui->dgKlienci->setSelectionBehavior(QAbstractItemView::SelectRows); //zaznaczanie calego wiersza
+
+        this->ui->dgKlienci->hideColumn(0); //chowanie kolumny z id
+
+        this->ui->dgKlienci->hideColumn(8);
+
+    } catch (const std::exception &e)
+    {
+
+        //******DEBUG_LOG*******
+        #ifdef LOG
+        qDebug()<<"Blad polaczenia z baza danych! :: program.cpp";
+        qDebug() << "ERROR load: " << baza.lastError().text();
+        #endif
+        //**********************
+
+        MsgBladLaczeniaBazy();
+    }
+}
+
 
 //---------------------------------------------WIADOMOSCI--------------------------------------------------------
 //------------------------------OK-------------RETRY------------BLAD_LACZENIA------------------------------------
@@ -1723,4 +2127,6 @@ void Program::msgRetry(QString title, QString msg)
 
 //wzcytywanie informacji z bazy danych -> jedna funkcja ze zmienna ktora tabela i selekt
 //w uslugach dziala opcja modyfikuj i usun gdy wszystkie rekordy usuniete sa -> uodpornic sie
+//MOZNA DODAC DO WSZYTSKICH POL TEKSTOWYCH retsrykcje co moga zawierac jak w kliencie
+//klient numer mieszkania nie ma w bazie sql rodzielic jakos do ulicy zeby szlo
 
