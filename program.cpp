@@ -94,6 +94,8 @@ Program::~Program()
 
     QSqlDatabase::removeDatabase(baza.connectionName());
 
+    delete [] *buttons;
+
     delete ui;
 }
 
@@ -2129,4 +2131,241 @@ void Program::msgRetry(QString title, QString msg)
 //w uslugach dziala opcja modyfikuj i usun gdy wszystkie rekordy usuniete sa -> uodpornic sie
 //MOZNA DODAC DO WSZYTSKICH POL TEKSTOWYCH retsrykcje co moga zawierac jak w kliencie
 //klient numer mieszkania nie ma w bazie sql rodzielic jakos do ulicy zeby szlo
+//sprawdzenie przy kliencie czy jak dodaje to pola nie puste
+
+//------------------------------------------------Wizyty----------------------------------------------------------
+
+int id_klienta;
+int id_pracownika;
+int id_uslugi;
+
+
+
+void Program::pokaszPracownikowWizyty()
+{
+    QSqlDatabase baza = QSqlDatabase::database();
+
+    //******DEBUG_LOG*******
+    #ifdef LOG
+    if(!baza.open())
+    {
+        qDebug() << "nie otwarta baza :: program.cpp";
+    }
+    #endif
+    //**********************
+
+    queryModel = new QSqlQueryModel(this);
+
+    queryModel->setQuery("SELECT uzytkownik_id, imie, nazwisko, uzytkownik_nazwa AS login, pracownik FROM uzytkownik "
+                         "WHERE CONCAT(imie, ' ', nazwisko, uzytkownik_nazwa) LIKE '%"+ this->ui->txtRPracownikSzukaj->text() +"%' AND pracownik = '1' ORDER BY nazwisko;");
+
+    try {
+
+        this->ui->dgRPracownik->setModel(queryModel);
+
+        this->ui->dgRPracownik->setSelectionBehavior(QAbstractItemView::SelectRows); //zaznaczanie calego wiersza
+
+        this->ui->dgRPracownik->hideColumn(0); //chowanie kolumny z id
+
+
+    } catch (const std::exception &e)
+    {
+
+        //******DEBUG_LOG*******
+        #ifdef LOG
+        qDebug()<<"Blad polaczenia z baza danych! :: program.cpp";
+        qDebug() << "ERROR load: " << baza.lastError().text();
+        #endif
+        //**********************
+
+        MsgBladLaczeniaBazy();
+    }
+
+}
+
+void Program::showUslugiWizyty()
+{
+    QSqlDatabase baza = QSqlDatabase::database();
+
+    //******DEBUG_LOG*******
+    #ifdef LOG
+    if(!baza.open())
+    {
+        qDebug() << "nie otwarta baza :: program.cpp";
+    }
+    #endif
+    //**********************
+
+    queryModel = new QSqlQueryModel(this);
+
+    queryModel->setQuery("SELECT * FROM uslugi WHERE nazwa LIKE '%"+ this->ui->txtRuslugaSzukaj->text() +"%' ORDER BY nazwa;");
+
+    try {
+
+        this->ui->dgRUsluga->setModel(queryModel);
+
+        this->ui->dgRUsluga->setSelectionBehavior(QAbstractItemView::SelectRows); //zaznaczanie calego wiersza
+
+        this->ui->dgRUsluga->hideColumn(0); //chowanie kolumny z id
+
+    } catch (const std::exception &e)
+    {
+
+        //******DEBUG_LOG*******
+        #ifdef LOG
+        qDebug()<<"Blad polaczenia z baza danych! :: program.cpp";
+        qDebug() << "ERROR load: " << baza.lastError().text();
+        #endif
+        //**********************
+
+        MsgBladLaczeniaBazy();
+    }
+
+}
+
+void Program::szukajKlientWizyty()
+{
+    QSqlDatabase baza = QSqlDatabase::database();
+
+    //******DEBUG_LOG*******
+    #ifdef LOG
+    if(!baza.open())
+    {
+        qDebug() << "nie otwarta baza :: program.cpp";
+    }
+    #endif
+    //**********************
+
+    queryModel = new QSqlQueryModel(this);
+
+    queryModel->setQuery("SELECT * FROM Gabinet.klient WHERE CONCAT(imie, ' ', nazwisko) "
+                         "LIKE '%"+ this->ui->txtRklientSzukaj->text() +"%' ORDER BY nazwisko;");
+
+    try {
+
+        this->ui->dgRKlient->setModel(queryModel);
+
+        this->ui->dgRKlient->setSelectionBehavior(QAbstractItemView::SelectRows); //zaznaczanie calego wiersza
+
+        this->ui->dgRKlient->hideColumn(0); //chowanie kolumny z id
+
+        this->ui->dgRKlient->hideColumn(8);
+
+    } catch (const std::exception &e)
+    {
+
+        //******DEBUG_LOG*******
+        #ifdef LOG
+        qDebug()<<"Blad polaczenia z baza danych! :: program.cpp";
+        qDebug() << "ERROR load: " << baza.lastError().text();
+        #endif
+        //**********************
+
+        MsgBladLaczeniaBazy();
+    }
+}
+
+void Program::on_btnRSzukajUsluga_clicked()
+{
+    showUslugiWizyty();
+}
+
+ void Program::on_btnRSzukajPracownik_clicked()
+ {
+    pokaszPracownikowWizyty();
+ }
+
+ void Program::on_btnRSzukajKlient_clicked()
+ {
+    szukajKlientWizyty();
+ }
+
+void Program::on_dgRUsluga_clicked(const QModelIndex &index)
+{
+    id_uslugi = this->ui->dgRUsluga->selectionModel()->selectedIndexes().at(0).data(Qt::DisplayRole).toInt();
+
+    //******DEBUG_LOG*******
+    #ifdef LOG
+    //qDebug() << "nacisnieta komorka: " << currentCell << " :: program.cpp";
+    qDebug() << "komorka o numerze id: " <<  id_rekordu << " :: program.cpp";
+    #endif
+    //**********************
+
+    QString nazwa = this->ui->dgRUsluga->selectionModel()->selectedIndexes().at(1).data(Qt::DisplayRole).toString();
+
+    this->ui->txtRUsluga->setText(nazwa);
+}
+
+void Program::on_dgRKlient_clicked(const QModelIndex &index)
+{
+    id_klienta = this->ui->dgRKlient->selectionModel()->selectedIndexes().at(0).data(Qt::DisplayRole).toInt();
+
+    //******DEBUG_LOG*******
+    #ifdef LOG
+    //qDebug() << "nacisnieta komorka: " << currentCell << " :: program.cpp";
+    qDebug() << "komorka o numerze id: " <<  id_rekordu << " :: program.cpp";
+    #endif
+    //**********************
+    QString imie = this->ui->dgRKlient->selectionModel()->selectedIndexes().at(1).data(Qt::DisplayRole).toString();
+
+    QString nazwisko = this->ui->dgRKlient->selectionModel()->selectedIndexes().at(2).data(Qt::DisplayRole).toString();
+
+    this->ui->txtRklient->setText(imie + " " + nazwisko);
+}
+
+void Program::on_dgRPracownik_clicked(const QModelIndex &index)
+{
+    id_pracownika = this->ui->dgRPracownik->selectionModel()->selectedIndexes().at(0).data(Qt::DisplayRole).toInt();
+
+    //******DEBUG_LOG*******
+    #ifdef LOG
+    //qDebug() << "nacisnieta komorka: " << currentCell << " :: program.cpp";
+    qDebug() << "komorka o numerze id: " <<  id_rekordu << " :: program.cpp";
+    #endif
+    //**********************
+    QString imie = this->ui->dgRPracownik->selectionModel()->selectedIndexes().at(1).data(Qt::DisplayRole).toString();
+
+    QString nazwisko = this->ui->dgRPracownik->selectionModel()->selectedIndexes().at(2).data(Qt::DisplayRole).toString();
+
+    this->ui->txtRPracownik->setText(imie + " " + nazwisko);
+
+    //push buttons dynamicznie
+
+    QGridLayout *myLayout = new QGridLayout;
+
+    for(int i=0; i<=15; i++)
+    {
+
+
+        buttons[i] = new QPushButton(this);
+        buttons[i]->setText(QString::number(i));
+        buttons[i]->setMaximumWidth(40);
+        buttons[i]->setMaximumHeight(20);
+        myLayout->addWidget(buttons[i], i + 1, 3);
+
+        //mapper->addMapping( buttons[i]);
+
+       // buttons[i+1] = new QPushButton(this);
+        //buttons[i+1]->setText(QString::number(7+i) + ":30");
+        //i=i+1;
+        //buttons[i]->se
+        //myLayout->addWidget(buttons[i+1]);
+    }
+
+    connect( *buttons
+           , SIGNAL( clicked() )
+           , this
+           , SLOT( actionButtonClick( QWidget* ) ) );
+
+    this->ui->gbRGodziny->setLayout(myLayout);
+   // QObject::connect(buttons, SIGNAL (clicked()), this, [=](){ buttons[i->setEnabled(0); });
+
+}
+
+void Program::actionButtonClick( QWidget* btn )
+{
+    qDebug() << "kjestem w kliknieciu";
+   // QPushButton* pushButton = qobject_cast< CustomPushButton* > ( btn );
+    // Do the job
+}
 

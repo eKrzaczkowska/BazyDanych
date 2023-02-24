@@ -17,6 +17,14 @@
 #include <QFile>
 #include <QSqlQuery>
 #include <QRegularExpressionValidator>
+#include <QWidget>
+#include <QGridLayout>
+#include <QPushButton>
+#include <QObject>
+#include <QDataWidgetMapper>
+
+
+
 //#include <QRegExpValidator>
 
 namespace Ui {
@@ -98,6 +106,20 @@ private slots:
 
     void on_dgKlienci_clicked(const QModelIndex &index);
 
+    void on_btnRSzukajUsluga_clicked();
+
+    void on_btnRSzukajPracownik_clicked();
+
+    void on_btnRSzukajKlient_clicked();
+
+    void on_dgRUsluga_clicked(const QModelIndex &index);
+
+    void on_dgRKlient_clicked(const QModelIndex &index);
+
+    void on_dgRPracownik_clicked(const QModelIndex &index);
+
+    void actionButtonClick( QWidget* btn );
+
 private:
 
     /*struct Uzytkownik
@@ -140,6 +162,14 @@ private:
     void usunUsluge();
 
     void szukajKlient();
+
+    void pokaszPracownikowWizyty();
+
+    void showUslugiWizyty();
+
+    void szukajKlientWizyty();
+
+    QPushButton* buttons[16];
 
     Ui::Program *ui;
 
