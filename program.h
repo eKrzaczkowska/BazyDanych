@@ -22,6 +22,7 @@
 #include <QPushButton>
 #include <QObject>
 #include <QDataWidgetMapper>
+#include <QSignalMapper>
 
 
 
@@ -118,7 +119,9 @@ private slots:
 
     void on_dgRPracownik_clicked(const QModelIndex &index);
 
-    void actionButtonClick( QWidget* btn );
+    void actionButtonClick(QString text);
+
+    void on_calendarWidget_clicked(const QDate &date);
 
 private:
 
@@ -169,7 +172,11 @@ private:
 
     void szukajKlientWizyty();
 
-    QPushButton* buttons[16];
+    void createButtons();
+
+    void wyswietl(QString text);
+
+    //QPushButton* buttons[16];
 
     Ui::Program *ui;
 

@@ -94,7 +94,7 @@ Program::~Program()
 
     QSqlDatabase::removeDatabase(baza.connectionName());
 
-    delete [] *buttons;
+    //delete [] buttons;
 
     delete ui;
 }
@@ -2329,43 +2329,58 @@ void Program::on_dgRPracownik_clicked(const QModelIndex &index)
 
     this->ui->txtRPracownik->setText(imie + " " + nazwisko);
 
-    //push buttons dynamicznie
-
-    QGridLayout *myLayout = new QGridLayout;
-
-    for(int i=0; i<=15; i++)
-    {
-
-
-        buttons[i] = new QPushButton(this);
-        buttons[i]->setText(QString::number(i));
-        buttons[i]->setMaximumWidth(40);
-        buttons[i]->setMaximumHeight(20);
-        myLayout->addWidget(buttons[i], i + 1, 3);
-
-        //mapper->addMapping( buttons[i]);
-
-       // buttons[i+1] = new QPushButton(this);
-        //buttons[i+1]->setText(QString::number(7+i) + ":30");
-        //i=i+1;
-        //buttons[i]->se
-        //myLayout->addWidget(buttons[i+1]);
-    }
-
-    connect( *buttons
-           , SIGNAL( clicked() )
-           , this
-           , SLOT( actionButtonClick( QWidget* ) ) );
-
-    this->ui->gbRGodziny->setLayout(myLayout);
-   // QObject::connect(buttons, SIGNAL (clicked()), this, [=](){ buttons[i->setEnabled(0); });
+    createButtons();
 
 }
 
-void Program::actionButtonClick( QWidget* btn )
+void Program::actionButtonClick(QString text)
 {
-    qDebug() << "kjestem w kliknieciu";
-   // QPushButton* pushButton = qobject_cast< CustomPushButton* > ( btn );
-    // Do the job
+    if(this->ui->txtRTermin->text().length() > 0)
+    {
+        QString data = this->ui->txtRTermin->text();
+
+        QString dataPlusGodzina = data + " " + text;
+
+        this->ui->txtRTermin->setText(dataPlusGodzina);
+    }
+    else
+    {
+        msgOK("WARRNING", "wybierz najpierw datę potem godzinę");
+    }
+
+}
+
+void Program::createButtons()
+{
+    QGridLayout *myLayout = new QGridLayout;
+
+    QStringList texts = {"07:00", "07:30", "08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
+                        "12:00", "12:00", "12:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30"};
+
+
+    for (int i = 0; i < texts.size(); ++i)
+    {
+        QString text = texts[i];
+
+        QPushButton *button = new QPushButton(text);
+
+        button->setMaximumWidth(40);
+
+        button->setMaximumHeight(20);
+
+        connect(button, &QPushButton::clicked, [this, text] { actionButtonClick(text); });
+
+        myLayout->addWidget(button, i+1, 3);
+    }
+
+    this->ui->gbRGodziny->setLayout(myLayout);;
+
+}
+
+void Program::on_calendarWidget_clicked(const QDate &date)
+{
+    QString data = date.toString();
+
+    this->ui->txtRTermin->setText(data);
 }
 
