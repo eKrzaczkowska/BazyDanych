@@ -2353,6 +2353,7 @@ void Program::actionButtonClick(QString text)
         QString dataPlusGodzina = data + " " + text;
 
         this->ui->txtRTermin->setText(dataPlusGodzina);
+
     }
     else
     {
@@ -2413,10 +2414,6 @@ void Program::createButtons()
 
         zapytanie.exec("SELECT rezerwacja_od, status FROM wizyty WHERE uzytkownik_id = '"+ QString::number(id_pracownika) +"'");
 
-        QString dzien;
-
-        QString data;
-
         while(zapytanie.next())
         {
             zajeteTerminy.append(zapytanie.value(0).toString());
@@ -2434,10 +2431,13 @@ void Program::createButtons()
                 {
                     if(text == zajeteTerminy[j].mid(11,5))
                     {
-                        button->setEnabled(0);
+                        button->setStyleSheet("background-color:red;");
+
                     }
                 }
             }
+
+            //QString style =  button->styleSheet();
 
             button->setMaximumWidth(40);
 
@@ -2464,8 +2464,6 @@ void Program::on_calendarWidget_clicked(const QDate &date)
 
 void Program::dataGodzinyPracy(const QDate &date)
 {
-    QString data = date.toString();
-
     int dzien =  date.dayOfWeek();
 
     QString praca_od;
