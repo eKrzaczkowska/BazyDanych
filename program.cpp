@@ -2138,6 +2138,10 @@ void Program::msgRetry(QString title, QString msg)
 int id_klienta;
 int id_pracownika;
 int id_uslugi;
+int godzina_od;
+int godzina_do;
+bool weekend = false;
+QGridLayout *myLayout  = new QGridLayout;
 
 
 
@@ -2329,6 +2333,10 @@ void Program::on_dgRPracownik_clicked(const QModelIndex &index)
 
     this->ui->txtRPracownik->setText(imie + " " + nazwisko);
 
+    QDate date = this->ui->calendarWidget->selectedDate();
+
+    dataGodzinyPracy(date);
+
     createButtons();
 
 }
@@ -2337,7 +2345,10 @@ void Program::actionButtonClick(QString text)
 {
     if(this->ui->txtRTermin->text().length() > 0)
     {
+        zamienDate();
+
         QString data = this->ui->txtRTermin->text();
+
 
         QString dataPlusGodzina = data + " " + text;
 
@@ -2352,35 +2363,349 @@ void Program::actionButtonClick(QString text)
 
 void Program::createButtons()
 {
-    QGridLayout *myLayout = new QGridLayout;
+    cleaningGBGodziny();
 
-    QStringList texts = {"07:00", "07:30", "08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
-                        "12:00", "12:00", "12:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30"};
-
-
-    for (int i = 0; i < texts.size(); ++i)
+    if(weekend != true)
     {
-        QString text = texts[i];
 
-        QPushButton *button = new QPushButton(text);
+        QStringList texts;
 
-        button->setMaximumWidth(40);
+        QStringList zajeteTerminy;
 
-        button->setMaximumHeight(20);
+        for (int i = 0; i < (godzina_do-godzina_od); i++)
+        {
 
-        connect(button, &QPushButton::clicked, [this, text] { actionButtonClick(text); });
+            int godzinaiInt = godzina_od + i;
 
-        myLayout->addWidget(button, i+1, 3);
+            QString godzina;
+
+            if(godzinaiInt < 10)
+            {
+                godzina = "0" + QString::number(godzinaiInt);
+            }
+            else
+            {
+                godzina =  QString::number(godzinaiInt);
+            }
+
+            for (int j=0; j<60; j+=30)
+            {
+                QString minuta;
+                if(j==0)
+                {
+                    minuta ="00";
+                }
+                else
+                {
+                    minuta = QString::number(j);
+                }
+
+                QString calosc = godzina + ":" + minuta;
+
+                texts.append(calosc);
+            }
+
+        }
+
+        QSqlDatabase baza = QSqlDatabase::database();
+
+        QSqlQuery zapytanie;
+
+        zapytanie.exec("SELECT rezerwacja_od, status FROM wizyty WHERE uzytkownik_id = '"+ QString::number(id_pracownika) +"'");
+
+        QString dzien;
+
+        QString data;
+
+        while(zapytanie.next())
+        {
+            zajeteTerminy.append(zapytanie.value(0).toString());
+        }
+
+        for (int i = 0; i < texts.size(); ++i)
+        {
+            QString text = texts[i];
+
+            QPushButton *button = new QPushButton(text);
+
+            for (int j=0; j<zajeteTerminy.size(); j++)
+            {
+                if( zajeteTerminy[j].mid(0,10) == this->ui->txtRTermin->text().mid(0,10))
+                {
+                    if(text == zajeteTerminy[j].mid(11,5))
+                    {
+                        button->setEnabled(0);
+                    }
+                }
+            }
+
+            button->setMaximumWidth(40);
+
+            button->setMaximumHeight(20);
+
+            connect(button, &QPushButton::clicked, [this, text] { actionButtonClick(text); });
+
+            myLayout->addWidget(button, i+1, 3);
+        }
+
+        this->ui->gbRGodziny->setLayout(myLayout);
+
     }
 
-    this->ui->gbRGodziny->setLayout(myLayout);;
 
 }
 
 void Program::on_calendarWidget_clicked(const QDate &date)
 {
+
+    dataGodzinyPracy(date);
+
+}
+
+void Program::dataGodzinyPracy(const QDate &date)
+{
     QString data = date.toString();
 
-    this->ui->txtRTermin->setText(data);
+    int dzien =  date.dayOfWeek();
+
+    QString praca_od;
+    QString praca_do;
+
+
+    switch(dzien)
+    {
+    case 1:
+        weekend = false;
+        praca_od = "pon_od";
+        praca_do = "pon_do";
+        break;
+    case 2:
+        weekend = false;
+        praca_od = "wt_od";
+        praca_do = "wt_do";
+        break;
+    case 3:
+        weekend = false;
+        praca_od = "sr_od";
+        praca_do = "sr_do";
+        break;
+    case 4:
+        weekend = false;
+        praca_od = "cz_od";
+        praca_do = "cz_do";
+        break;
+    case 5:
+        weekend = false;
+        praca_od = "pt_od";
+        praca_do = "pt_do";
+        break;
+    case 6:
+        weekend = true;
+        break;
+    case 7:
+        weekend = true;
+        break;
+    }
+
+    zamienDate();
+
+    if(weekend == false)
+    {
+        QSqlDatabase baza = QSqlDatabase::database();
+
+        //******DEBUG_LOG*******
+        #ifdef LOG
+        if(!baza.open())
+        {
+            qDebug() << "nie otwarta baza :: program.cpp";
+        }
+        #endif
+        //**********************
+
+        QSqlQueryModel zapytanie;
+
+        zapytanie.setQuery("SELECT "+praca_od+", "+ praca_do +" FROM godziny WHERE uzytkownik_id = '"+ QString::number(id_pracownika) +"';");
+
+        praca_od = zapytanie.record(0).value(0).toString().mid(0,2);
+
+        praca_do = zapytanie.record(0).value(1).toString().mid(0,2);
+
+        godzina_od = praca_od.toInt();
+
+        godzina_do = praca_do.toInt();
+
+        if(id_pracownika != 0)
+        {
+            createButtons();
+        }
+        else
+        {
+            msgRetry("ERROR", "Wybierz pracownika");
+        }
+    }
+    else
+    {
+        cleaningGBGodziny();
+
+        this->ui->gbRGodziny->setLayout(myLayout);
+    }
+}
+
+void Program::cleaningGBGodziny()
+{
+    while( myLayout->count() )
+    {
+        QWidget* widget = myLayout->itemAt(0)->widget();
+        if( widget )
+        {
+            myLayout->removeWidget(widget);
+            delete widget;
+        }
+    }
+}
+
+
+void Program::on_btnRDodaj_clicked()
+{
+    if(id_klienta != 0 && id_pracownika != 0 && id_uslugi !=0  && this->ui->txtRTermin->text().length() > 10)
+    {
+
+        QSqlDatabase baza = QSqlDatabase::database();
+
+        //******DEBUG_LOG*******
+        #ifdef LOG
+        if(!baza.open())
+        {
+            qDebug() << "nie otwarta baza :: program.cpp";
+        }
+        #endif
+        //**********************
+
+        if(baza.transaction())
+        {
+            if(true)
+            {
+                QSqlQuery query(baza);
+
+                QString data_od = this->ui->txtRTermin->text();
+
+                QString data_do;
+
+               // dataGodzinyPracy(date);
+
+                query.prepare("INSERT INTO `Gabinet`.`wizyty` (`klient_id`, `uslugi_id`, `uzytkownik_id`, `rezerwacja_od`, `rezerwacja_do`, `status`) "
+                              "VALUES (:klient_id, :uslugi_id, :uzytkownik_id, :rezerwacja_od, '1970-01-01 00:00:00', :status);");
+
+                query.bindValue( ":klient_id", id_klienta);
+
+                query.bindValue( ":uslugi_id", id_uslugi);
+
+                query.bindValue( ":uzytkownik_id", id_pracownika);
+
+                query.bindValue( ":rezerwacja_od", data_od);
+
+                //query.bindValue( ":klient_id", id_klienta);
+
+                query.bindValue( ":status", "oczekuje");
+
+                if( !query.exec() )
+                {
+                    //******DEBUG_LOG*******
+                    #ifdef LOG
+                    qDebug() << "Failed to add tag :: program.cpp";
+                    #endif
+                    //**********************
+
+                    msgRetry("ERROR", "NIE UDALO SIE DODAC WIZYTY");
+                }
+                else
+                {
+                    msgOK("WARNING", "DODANO WIZYTE");
+                }
+
+               if(!baza.commit())
+               {
+                   //******DEBUG_LOG*******
+                   #ifdef LOG
+                   qDebug()<<"Failed to commit :: program.cpp";
+                   #endif
+                   //**********************
+
+                   baza.rollback();
+               }
+
+               //******DEBUG_LOG*******
+               #ifdef LOG
+               qDebug() << "Inserted using Qt Transaction :: program.cpp";
+               #endif
+               //**********************
+            }
+        }
+        else
+        {
+            //******DEBUG_LOG*******
+            #ifdef LOG
+            qDebug() << "Failed to start transaction mode :: program.cpp";
+            #endif
+            //**********************
+        }
+    }
+    else
+    {
+        msgOK("WARRNING","uzupełnij wybór");
+    }
+
+    createButtons();
+}
+
+
+void Program::on_btnRUsun_clicked()
+{
+
+}
+
+
+void Program::on_btnRmodyfikuj_clicked()
+{
+
+}
+
+void Program::zamienDate()
+{
+    QDate date = this->ui->calendarWidget->selectedDate();
+
+    int year;
+
+    int monthInt;
+
+    int dayInt;
+
+    date.getDate( &year, &monthInt, &dayInt);
+
+//    qDebug() << year << " " << month << " " << day;
+
+    QString day;
+
+    QString month;
+
+    if(dayInt <10)
+    {
+        day = "0" + QString::number(dayInt);
+    }
+    else
+    {
+         day = QString::number(dayInt);
+    }
+
+    if(monthInt <10)
+    {
+        month = "0" + QString::number(monthInt);
+    }
+    else
+    {
+        month = QString::number(monthInt);
+    }
+
+    this->ui->txtRTermin->setText(QString::number(year) + "-" + month + "-" + day);
 }
 

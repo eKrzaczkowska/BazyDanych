@@ -123,6 +123,12 @@ private slots:
 
     void on_calendarWidget_clicked(const QDate &date);
 
+    void on_btnRDodaj_clicked();
+
+    void on_btnRUsun_clicked();
+
+    void on_btnRmodyfikuj_clicked();
+
 private:
 
     /*struct Uzytkownik
@@ -175,6 +181,13 @@ private:
     void createButtons();
 
     void wyswietl(QString text);
+
+    void dataGodzinyPracy(const QDate &date);
+
+    void cleaningGBGodziny();
+
+    void zamienDate();
+
 
     //QPushButton* buttons[16];
 
