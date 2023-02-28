@@ -2343,6 +2343,7 @@ void Program::on_dgRPracownik_clicked(const QModelIndex &index)
 
 void Program::actionButtonClick(QString text)
 {
+
     if(this->ui->txtRTermin->text().length() > 0)
     {
         zamienDate();
@@ -2353,6 +2354,42 @@ void Program::actionButtonClick(QString text)
         QString dataPlusGodzina = data + " " + text;
 
         this->ui->txtRTermin->setText(dataPlusGodzina);
+
+        QSqlDatabase baza = QSqlDatabase::database();
+
+        QSqlQueryModel zapytanie;
+
+        zapytanie.setQuery("SELECT wizyty_id, klient_id, uslugi_id FROM wizyty WHERE rezerwacja_od = '"+ this->ui->txtRTermin->text() +"'");
+
+        QString wizyty_id = zapytanie.record(0).value(0).toString();
+
+        QString klient_id = zapytanie.record(0).value(1).toString();
+
+        QString uslugi_id = zapytanie.record(0).value(2).toString();
+
+        //qDebug() << wizyty_id << klient_id <<uslugi_id;
+
+        if(wizyty_id != "")
+        {
+            zapytanie.setQuery("SELECT imie, nazwisko FROM klient WHERE klient_id = "+ klient_id +"");
+
+            QString imie = zapytanie.record(0).value(0).toString();
+
+            QString nazwisko = zapytanie.record(0).value(1).toString();
+
+            this->ui->txtRklient->setText( nazwisko + " " + imie);
+
+            zapytanie.setQuery("SELECT nazwa FROM uslugi WHERE uslugi_id = "+ uslugi_id +"");
+
+            QString nazwa = zapytanie.record(0).value(0).toString();
+
+            this->ui->txtRUsluga->setText(nazwa);
+        }
+        else
+        {
+            this->ui->txtRUsluga->clear();
+            this->ui->txtRklient->clear();
+        }
 
     }
     else
@@ -2565,61 +2602,178 @@ void Program::cleaningGBGodziny()
 
 void Program::on_btnRDodaj_clicked()
 {
-    if(id_klienta != 0 && id_pracownika != 0 && id_uslugi !=0  && this->ui->txtRTermin->text().length() > 10)
+    QSqlDatabase baza = QSqlDatabase::database();
+
+    QSqlQueryModel zapytanie;
+
+    zapytanie.setQuery("SELECT status FROM wizyty WHERE rezerwacja_od = '"+ this->ui->txtRTermin->text() +"'");
+
+    QString status = zapytanie.record(0).value(0).toString();
+
+    //qDebug() << status;
+
+    if(status != "oczekuje")
     {
-
-        QSqlDatabase baza = QSqlDatabase::database();
-
-        //******DEBUG_LOG*******
-        #ifdef LOG
-        if(!baza.open())
+        if(id_klienta != 0 && id_pracownika != 0 && id_uslugi !=0  && this->ui->txtRTermin->text().length() > 10)
         {
-            qDebug() << "nie otwarta baza :: program.cpp";
-        }
-        #endif
-        //**********************
 
-        if(baza.transaction())
-        {
-            if(true)
+            //******DEBUG_LOG*******
+            #ifdef LOG
+            if(!baza.open())
             {
+                qDebug() << "nie otwarta baza :: program.cpp";
+            }
+            #endif
+            //**********************
+
+            if(baza.transaction())
+            {
+                if(true)
+                {
+                    QSqlQuery query(baza);
+
+                    QString data_od = this->ui->txtRTermin->text();
+
+                    QString data_do;
+
+                   // dataGodzinyPracy(date);
+
+                    query.prepare("INSERT INTO `Gabinet`.`wizyty` (`klient_id`, `uslugi_id`, `uzytkownik_id`, `rezerwacja_od`, `rezerwacja_do`, `status`) "
+                                  "VALUES (:klient_id, :uslugi_id, :uzytkownik_id, :rezerwacja_od, '1970-01-01 00:00:00', :status);");
+
+                    query.bindValue( ":klient_id", id_klienta);
+
+                    query.bindValue( ":uslugi_id", id_uslugi);
+
+                    query.bindValue( ":uzytkownik_id", id_pracownika);
+
+                    query.bindValue( ":rezerwacja_od", data_od);
+
+                    //query.bindValue( ":klient_id", id_klienta);
+
+                    query.bindValue( ":status", "oczekuje");
+
+                    if( !query.exec() )
+                    {
+                        //******DEBUG_LOG*******
+                        #ifdef LOG
+                        qDebug() << "Failed to add tag :: program.cpp";
+                        #endif
+                        //**********************
+
+                        msgRetry("ERROR", "NIE UDALO SIE DODAC WIZYTY");
+                    }
+                    else
+                    {
+                        msgOK("WARNING", "DODANO WIZYTE");
+                    }
+
+                   if(!baza.commit())
+                   {
+                       //******DEBUG_LOG*******
+                       #ifdef LOG
+                       qDebug()<<"Failed to commit :: program.cpp";
+                       #endif
+                       //**********************
+
+                       baza.rollback();
+                   }
+
+                   //******DEBUG_LOG*******
+                   #ifdef LOG
+                   qDebug() << "Inserted using Qt Transaction :: program.cpp";
+                   #endif
+                   //**********************
+                }
+            }
+            else
+            {
+                //******DEBUG_LOG*******
+                #ifdef LOG
+                qDebug() << "Failed to start transaction mode :: program.cpp";
+                #endif
+                //**********************
+            }
+        }
+        else
+        {
+            msgOK("WARRNING","UZUPEŁNIJ POLA");
+        }
+
+        createButtons();
+    }
+    else
+    {
+        msgRetry("ERROR", "WYBRANY TERMIN JEST ZAJETY");
+    }
+}
+
+
+void Program::on_btnRUsun_clicked()
+{
+
+}
+
+
+void Program::on_btnRmodyfikuj_clicked()
+{
+    QSqlDatabase baza = QSqlDatabase::database();
+
+    QSqlQueryModel zapytanie;
+
+    zapytanie.setQuery("SELECT status, wizyty_id, uzytkownik_id, klient_id, uslugi_id FROM wizyty WHERE rezerwacja_od = '"+ this->ui->txtRTermin->text() +"'");
+
+    QString status = zapytanie.record(0).value(0).toString();
+
+    int wizyty_id = zapytanie.record(0).value(1).toInt();
+
+    int pracownik_id = zapytanie.record(0).value(2).toInt();
+
+    int klient_id = zapytanie.record(0).value(3).toInt();
+
+    int uslugi_id = zapytanie.record(0).value(4).toInt();
+
+    //qDebug() << status << wizyty_id << pracownik_id << klient_id;
+
+    if(status == "oczekuje")
+    {
+        if(klient_id != 0 && id_pracownika == pracownik_id && wizyty_id !=0 )
+        {
+            qDebug() << "jestem";
+
+            if(baza.transaction())
+            {
+                if(id_uslugi == 0)
+                {
+                    id_uslugi = uslugi_id;
+                }
+
+                if(id_klienta == 0)
+                {
+                    id_klienta = klient_id;
+                }
+
                 QSqlQuery query(baza);
 
-                QString data_od = this->ui->txtRTermin->text();
-
-                QString data_do;
-
-               // dataGodzinyPracy(date);
-
-                query.prepare("INSERT INTO `Gabinet`.`wizyty` (`klient_id`, `uslugi_id`, `uzytkownik_id`, `rezerwacja_od`, `rezerwacja_do`, `status`) "
-                              "VALUES (:klient_id, :uslugi_id, :uzytkownik_id, :rezerwacja_od, '1970-01-01 00:00:00', :status);");
-
-                query.bindValue( ":klient_id", id_klienta);
-
-                query.bindValue( ":uslugi_id", id_uslugi);
-
-                query.bindValue( ":uzytkownik_id", id_pracownika);
-
-                query.bindValue( ":rezerwacja_od", data_od);
-
-                //query.bindValue( ":klient_id", id_klienta);
-
-                query.bindValue( ":status", "oczekuje");
+                query.prepare("UPDATE `Gabinet`.`wizyty` SET `uslugi_id` = '"+ QString::number(id_uslugi) +"', `klient_id` = '"+ QString::number(id_klienta) +
+                              "' WHERE wizyty_id = '" +  QString::number(wizyty_id) + "';");
 
                 if( !query.exec() )
                 {
+
                     //******DEBUG_LOG*******
                     #ifdef LOG
                     qDebug() << "Failed to add tag :: program.cpp";
                     #endif
                     //**********************
 
-                    msgRetry("ERROR", "NIE UDALO SIE DODAC WIZYTY");
+                    msgRetry("ERROR", "NIE ZMODYFIKOWANO DANYCH WIZYTY");
                 }
                 else
                 {
-                    msgOK("WARNING", "DODANO WIZYTE");
+                    msgOK("WARNING", "ZMODYFIKOWANO DANE WIZYTY");
                 }
+
 
                if(!baza.commit())
                {
@@ -2637,34 +2791,27 @@ void Program::on_btnRDodaj_clicked()
                qDebug() << "Inserted using Qt Transaction :: program.cpp";
                #endif
                //**********************
+
+            }
+            else
+            {
+                //******DEBUG_LOG*******
+                #ifdef LOG
+                qDebug() << "Failed to start transaction mode :: program.cpp";
+                #endif
+                //**********************
             }
         }
         else
         {
-            //******DEBUG_LOG*******
-            #ifdef LOG
-            qDebug() << "Failed to start transaction mode :: program.cpp";
-            #endif
-            //**********************
+            msgRetry("ERROR", "NIE UDALOC SIE ZMODYFIKOWAC DANYCH");
         }
     }
     else
     {
-        msgOK("WARRNING","uzupełnij wybór");
+        msgRetry("ERROR", "WYBRANA WIZYTY NA ISTNIEJE - NIE DA SIE ZMODYFIKOWAC");
     }
 
-    createButtons();
-}
-
-
-void Program::on_btnRUsun_clicked()
-{
-
-}
-
-
-void Program::on_btnRmodyfikuj_clicked()
-{
 
 }
 
