@@ -13,31 +13,48 @@
   <property name="windowTitle">
    <string>logInWindow</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true">QMainWindow { background-color: rgb(98, 160, 234); border: rgb(0, 0, 0); }
+
+QPushButton { background-color: rgb(248, 228, 92); border: 1px solid white; }
+
+</string>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QPushButton" name="btnZaloguj">
     <property name="geometry">
      <rect>
-      <x>400</x>
-      <y>240</y>
-      <width>88</width>
-      <height>26</height>
+      <x>350</x>
+      <y>220</y>
+      <width>151</width>
+      <height>41</height>
      </rect>
     </property>
+    <property name="font">
+     <font>
+      <bold>true</bold>
+     </font>
+    </property>
     <property name="text">
-     <string>Zaloguj</string>
+     <string>ZALOGUJ</string>
     </property>
    </widget>
    <widget class="QPushButton" name="btnAnuluj">
     <property name="geometry">
      <rect>
-      <x>150</x>
-      <y>240</y>
-      <width>88</width>
-      <height>26</height>
+      <x>90</x>
+      <y>220</y>
+      <width>151</width>
+      <height>41</height>
      </rect>
     </property>
+    <property name="font">
+     <font>
+      <bold>true</bold>
+     </font>
+    </property>
     <property name="text">
-     <string>Anuluj</string>
+     <string>ANULUJ</string>
     </property>
     <property name="autoDefault">
      <bool>false</bool>
@@ -48,12 +65,12 @@
      <rect>
       <x>140</x>
       <y>80</y>
-      <width>91</width>
+      <width>131</width>
       <height>31</height>
      </rect>
     </property>
     <property name="text">
-     <string>użytkownik:</string>
+     <string>UŻYTKOWNIK:</string>
     </property>
    </widget>
    <widget class="QLabel" name="label_2">
@@ -66,15 +83,15 @@
      </rect>
     </property>
     <property name="text">
-     <string>hasło:</string>
+     <string>HASŁO:</string>
     </property>
    </widget>
    <widget class="QLineEdit" name="txtHaslo">
     <property name="geometry">
      <rect>
-      <x>330</x>
-      <y>150</y>
-      <width>113</width>
+      <x>280</x>
+      <y>140</y>
+      <width>221</width>
       <height>26</height>
      </rect>
     </property>
@@ -88,9 +105,9 @@
    <widget class="QLineEdit" name="txtUzytkownik">
     <property name="geometry">
      <rect>
-      <x>330</x>
+      <x>280</x>
       <y>80</y>
-      <width>113</width>
+      <width>221</width>
       <height>26</height>
      </rect>
     </property>

@@ -129,16 +129,9 @@ private slots:
 
     void on_btnRmodyfikuj_clicked();
 
-private:
+    //void on_tabWidget_currentChanged(int index);
 
-    /*struct Uzytkownik
-    {
-        int id = 0;
-        QString imie = "";
-        QString nazwisko = "";
-        QString haslo = "";
-        bool jestPracownikiem = false;
-    };*/
+private:
 
     void PobieranieDanych(QString nazwaUzytkownikaLog, struct Uzytkownik *uzytkownik);
 
@@ -187,9 +180,6 @@ private:
     void cleaningGBGodziny();
 
     void zamienDate();
-
-
-    //QPushButton* buttons[16];
 
     Ui::Program *ui;
 
